@@ -172,7 +172,6 @@ func (s *BloomFilter) decrement() {
 	r := rand.Intn(int(s.m))
 	for i := uint(0); i < s.p; i++ {
 		idx := (r + int(i)) % int(s.m)
-		//fmt.Println("p", idx)
 		if s.cells[idx] >= 1 {
 			s.cells[idx]--
 		}
