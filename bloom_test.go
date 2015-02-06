@@ -138,6 +138,48 @@ func TestReset(t *testing.T) {
 	}
 }
 
+func BenchmarkAdd(b *testing.B) {
+	b.StopTimer()
+	f := NewDefaultBloomFilter(100000)
+	data := make([][]byte, b.N)
+	for i := 0; i < b.N; i++ {
+		data[i] = []byte(strconv.Itoa(i))
+	}
+	b.StartTimer()
+
+	for n := 0; n < b.N; n++ {
+		f.Add(data[n])
+	}
+}
+
+func BenchmarkTest(b *testing.B) {
+	b.StopTimer()
+	f := NewDefaultBloomFilter(100000)
+	data := make([][]byte, b.N)
+	for i := 0; i < b.N; i++ {
+		data[i] = []byte(strconv.Itoa(i))
+	}
+	b.StartTimer()
+
+	for n := 0; n < b.N; n++ {
+		f.Test(data[n])
+	}
+}
+
+func BenchmarkTestAndAdd(b *testing.B) {
+	b.StopTimer()
+	f := NewDefaultBloomFilter(100000)
+	data := make([][]byte, b.N)
+	for i := 0; i < b.N; i++ {
+		data[i] = []byte(strconv.Itoa(i))
+	}
+	b.StartTimer()
+
+	for n := 0; n < b.N; n++ {
+		f.TestAndAdd(data[n])
+	}
+}
+
 func round(val float64, roundOn float64, places int) (newVal float64) {
 	var round float64
 	pow := math.Pow(10, float64(places))
