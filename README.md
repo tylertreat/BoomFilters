@@ -52,6 +52,43 @@ func main() {
 }
 ```
 
+## Classic Bloom Filter
+
+A classic Bloom filter is a special case of a Stable Bloom Filter where the eviction rate is zero and the cell size is one. Bloom filters have a limited capacity, depending on the configured size. Once all bits are set, the probability of a false positive is 1. However, traditional Bloom filters cannot return a false negative.
+
+A Bloom filter is ideal for cases where the data set is known a priori because the false-positive rate can be configured by the size and number of hash functions.
+
+### Usage
+
+```go
+package main
+
+import (
+    "fmt"
+    "github.com/tylertreat/BoomFilters"
+)
+
+func main() {
+    bf := boom.NewBloomFilter(10000, 3)
+    
+    bf.Add([]byte(`a`))
+    if bf.Test([]byte(`a`)) {
+        fmt.Println("contains a")
+    }
+    
+    if !bf.TestAndAdd([]byte(`b`)) {
+        fmt.Println("doesn't contain b")
+    }
+    
+    if bf.Test([]byte(`b`)) {
+        fmt.Println("now it contains b!")
+    }
+    
+    // Restore to initial state.
+    bf.Reset()
+}
+```
+
 ## Inverse Bloom Filter
 
 An Inverse Bloom Filter, or "the opposite of a Bloom filter", is a concurrent, probabilistic data structure used to test whether an item has been observed or not. This implementation, [originally described and written by Jeff Hodges](http://www.somethingsimilar.com/2012/05/21/the-opposite-of-a-bloom-filter/), replaces the use of MD5 hashing with a non-cryptographic FNV-1a function.
