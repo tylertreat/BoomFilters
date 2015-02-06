@@ -16,7 +16,6 @@ type BloomFilter struct {
 	m     uint           // filter size
 	k     uint           // number of hash functions
 	p     float64        // fill ratio
-	n     uint           // number of items to store
 }
 
 // NewBloomFilter creates a new Bloom filter optimized to store n items with a
@@ -29,7 +28,6 @@ func NewBloomFilter(n uint, fpRate float64) *BloomFilter {
 		m:     m,
 		k:     OptimalK(fpRate),
 		p:     fillRatio,
-		n:     n,
 	}
 }
 
