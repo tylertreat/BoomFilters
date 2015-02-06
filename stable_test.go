@@ -24,10 +24,10 @@ func TestNewStableBloomFilterClampK(t *testing.T) {
 	}
 }
 
-// Ensures that NewFilter creates a Stable Bloom Filter with p=0, max=1 and k
-// hash functions.
-func TestNewFilter(t *testing.T) {
-	f := NewBloomFilter(100, 3)
+// Ensures that NewUnstableBloomFilter creates a Stable Bloom Filter with p=0,
+// max=1 and k hash functions.
+func TestNewUnstableBloomFilter(t *testing.T) {
+	f := NewUnstableBloomFilter(100, 3)
 
 	if f.k != 3 {
 		t.Errorf("Expected 3, got %d", f.k)
@@ -76,7 +76,7 @@ func TestTestAndAdd(t *testing.T) {
 	}
 
 	if f.Add([]byte(`a`)) != f {
-		t.Error("Returned BloomFilter should be the same instance")
+		t.Error("Returned StableBloomFilter should be the same instance")
 	}
 
 	// `a` is now in the filter.
@@ -143,7 +143,7 @@ func TestStablePoint(t *testing.T) {
 
 	// A classic Bloom filter is a special case of SBF where P is 0 and max is
 	// 1. It doesn't have a stable point.
-	bf := NewBloomFilter(1000, 3)
+	bf := NewUnstableBloomFilter(1000, 3)
 	if stablePoint := bf.StablePoint(); stablePoint != 0 {
 		t.Errorf("Expected stable point 0, got %f", stablePoint)
 	}
@@ -160,7 +160,7 @@ func TestFalsePositiveRate(t *testing.T) {
 
 	// Classic Bloom filters have an unbounded rate of false positives. Once
 	// they become full, every query returns a false positive.
-	bf := NewBloomFilter(1000, 3)
+	bf := NewUnstableBloomFilter(1000, 3)
 	if fps := bf.FalsePositiveRate(); fps != 1 {
 		t.Errorf("Expected fps 1, got %f", fps)
 	}
@@ -174,7 +174,7 @@ func TestReset(t *testing.T) {
 	}
 
 	if f.Reset() != f {
-		t.Error("Returned BloomFilter should be the same instance")
+		t.Error("Returned StableBloomFilter should be the same instance")
 	}
 
 	for _, cell := range f.cells {
@@ -184,7 +184,7 @@ func TestReset(t *testing.T) {
 	}
 }
 
-func BenchmarkAdd(b *testing.B) {
+func BenchmarkStableAdd(b *testing.B) {
 	b.StopTimer()
 	f := NewDefaultStableBloomFilter(100000)
 	data := make([][]byte, b.N)
@@ -198,7 +198,7 @@ func BenchmarkAdd(b *testing.B) {
 	}
 }
 
-func BenchmarkTest(b *testing.B) {
+func BenchmarkStableTest(b *testing.B) {
 	b.StopTimer()
 	f := NewDefaultStableBloomFilter(100000)
 	data := make([][]byte, b.N)
@@ -212,7 +212,7 @@ func BenchmarkTest(b *testing.B) {
 	}
 }
 
-func BenchmarkTestAndAdd(b *testing.B) {
+func BenchmarkStableTestAndAdd(b *testing.B) {
 	b.StopTimer()
 	f := NewDefaultStableBloomFilter(100000)
 	data := make([][]byte, b.N)
@@ -226,6 +226,47 @@ func BenchmarkTestAndAdd(b *testing.B) {
 	}
 }
 
+func BenchmarkUnstableAdd(b *testing.B) {
+	b.StopTimer()
+	f := NewUnstableBloomFilter(100000, 3)
+	data := make([][]byte, b.N)
+	for i := 0; i < b.N; i++ {
+		data[i] = []byte(strconv.Itoa(i))
+	}
+	b.StartTimer()
+
+	for n := 0; n < b.N; n++ {
+		f.Add(data[n])
+	}
+}
+
+func BenchmarkUnstableTest(b *testing.B) {
+	b.StopTimer()
+	f := NewUnstableBloomFilter(100000, 3)
+	data := make([][]byte, b.N)
+	for i := 0; i < b.N; i++ {
+		data[i] = []byte(strconv.Itoa(i))
+	}
+	b.StartTimer()
+
+	for n := 0; n < b.N; n++ {
+		f.Test(data[n])
+	}
+}
+
+func BenchmarkUnstableTestAndAdd(b *testing.B) {
+	b.StopTimer()
+	f := NewUnstableBloomFilter(100000, 3)
+	data := make([][]byte, b.N)
+	for i := 0; i < b.N; i++ {
+		data[i] = []byte(strconv.Itoa(i))
+	}
+	b.StartTimer()
+
+	for n := 0; n < b.N; n++ {
+		f.TestAndAdd(data[n])
+	}
+}
 func round(val float64, roundOn float64, places int) (newVal float64) {
 	var round float64
 	pow := math.Pow(10, float64(places))

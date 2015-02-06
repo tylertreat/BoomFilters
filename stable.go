@@ -33,7 +33,7 @@ import (
 // false negatives.
 type StableBloomFilter struct {
 	cells       []uint8
-	hash        hash.Hash64
+	hash        hash.Hash
 	m           uint
 	p           uint
 	k           uint
@@ -113,17 +113,16 @@ func (s *StableBloomFilter) FalsePositiveRate() float64 {
 // non-zero probability of false positives and false negatives.
 func (s *StableBloomFilter) Test(data []byte) bool {
 	lower, upper := s.hashKernel(data)
-	member := true
 
 	// If any of the K cells are 0, then it's not a member.
 	for i := uint(0); i < s.k; i++ {
 		s.indexBuffer[i] = (uint(lower) + uint(upper)*i) % s.m
 		if s.cells[s.indexBuffer[i]] == 0 {
-			member = false
+			return false
 		}
 	}
 
-	return member
+	return true
 }
 
 // Add will add the data to the Stable Bloom Filter. It returns the filter to
