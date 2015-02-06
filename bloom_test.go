@@ -1,4 +1,4 @@
-package stable
+package bloom
 
 import (
 	"math"
@@ -6,28 +6,50 @@ import (
 	"testing"
 )
 
-// Ensures that NewBloomFilter clamps p to size.
-func TestNewBloomFilterClampP(t *testing.T) {
-	f := NewBloomFilter(5, 3, 10, 1)
+// Ensures that NewStableFilter clamps p to size.
+func TestNewStableFilterClampP(t *testing.T) {
+	f := NewStableFilter(5, 3, 10, 1)
 
 	if f.p != f.m {
 		t.Errorf("Expected %d, got %d", f.m, f.p)
 	}
 }
 
-// Ensures that NewBloomFilter clamps k to size.
-func TestNewBloomFilterClampK(t *testing.T) {
-	f := NewBloomFilter(10, 15, 5, 1)
+// Ensures that NewStableFilter clamps k to size.
+func TestNewStableFilterClampK(t *testing.T) {
+	f := NewStableFilter(10, 15, 5, 1)
 
 	if f.k != f.m {
 		t.Errorf("Expected %d, got %d", f.k, f.p)
 	}
 }
 
+// Ensures that NewFilter creates a Stable Bloom Filter with p=0, max=1 and k
+// hash functions.
+func TestNewFilter(t *testing.T) {
+	f := NewFilter(100, 3)
+
+	if f.k != 3 {
+		t.Errorf("Expected 3, got %d", f.k)
+	}
+
+	if f.m != 100 {
+		t.Errorf("Expected 100, got %d", f.m)
+	}
+
+	if f.p != 0 {
+		t.Errorf("Expected 0, got %d", f.p)
+	}
+
+	if f.max != 1 {
+		t.Errorf("Expected 1, got %d", f.max)
+	}
+}
+
 // Ensures that Cells returns the number of cells, m, in the Stable Bloom
 // Filter.
 func TestCells(t *testing.T) {
-	f := NewBloomFilter(100, 3, 10, 1)
+	f := NewStableFilter(100, 3, 10, 1)
 
 	if cells := f.Cells(); cells != 100 {
 		t.Errorf("Expected 100, got %d", cells)
@@ -37,7 +59,7 @@ func TestCells(t *testing.T) {
 // Ensures that K returns the number of hash functions in the Stable Bloom
 // Filter.
 func TestK(t *testing.T) {
-	f := NewBloomFilter(100, 3, 10, 1)
+	f := NewStableFilter(100, 3, 10, 1)
 
 	if k := f.K(); k != 3 {
 		t.Errorf("Expected 3, got %d", k)
@@ -46,7 +68,7 @@ func TestK(t *testing.T) {
 
 // Ensures that Test, Add, and TestAndAdd behave correctly.
 func TestTestAndAdd(t *testing.T) {
-	f := NewDefaultBloomFilter(1000)
+	f := NewDefaultStableFilter(1000)
 
 	// `a` isn't in the filter.
 	if f.Test([]byte(`a`)) {
@@ -100,7 +122,7 @@ func TestTestAndAdd(t *testing.T) {
 // Ensures that StablePoint returns the expected fraction of zeros for large
 // iterations.
 func TestStablePoint(t *testing.T) {
-	f := NewBloomFilter(1000, 3, 15, 1)
+	f := NewStableFilter(1000, 3, 15, 1)
 	for i := 0; i < 1000000; i++ {
 		f.Add([]byte(strconv.Itoa(i)))
 	}
@@ -118,11 +140,18 @@ func TestStablePoint(t *testing.T) {
 	if actual < expected {
 		t.Errorf("Expected zeros rate to be greater than or equal to %f, got %f", expected, actual)
 	}
+
+	// A classic Bloom filter is a special case of SBF where P is 0 and max is
+	// 1. It doesn't have a stable point.
+	bf := NewStableFilter(1000, 3, 0, 1)
+	if stablePoint := bf.StablePoint(); stablePoint != 0 {
+		t.Errorf("Expected stable point 0, got %f", stablePoint)
+	}
 }
 
 // Ensures that Reset sets every cell to zero.
 func TestReset(t *testing.T) {
-	f := NewDefaultBloomFilter(1000)
+	f := NewDefaultStableFilter(1000)
 	for i := 0; i < 1000; i++ {
 		f.Add([]byte(strconv.Itoa(i)))
 	}
@@ -140,7 +169,7 @@ func TestReset(t *testing.T) {
 
 func BenchmarkAdd(b *testing.B) {
 	b.StopTimer()
-	f := NewDefaultBloomFilter(100000)
+	f := NewDefaultStableFilter(100000)
 	data := make([][]byte, b.N)
 	for i := 0; i < b.N; i++ {
 		data[i] = []byte(strconv.Itoa(i))
@@ -154,7 +183,7 @@ func BenchmarkAdd(b *testing.B) {
 
 func BenchmarkTest(b *testing.B) {
 	b.StopTimer()
-	f := NewDefaultBloomFilter(100000)
+	f := NewDefaultStableFilter(100000)
 	data := make([][]byte, b.N)
 	for i := 0; i < b.N; i++ {
 		data[i] = []byte(strconv.Itoa(i))
@@ -168,7 +197,7 @@ func BenchmarkTest(b *testing.B) {
 
 func BenchmarkTestAndAdd(b *testing.B) {
 	b.StopTimer()
-	f := NewDefaultBloomFilter(100000)
+	f := NewDefaultStableFilter(100000)
 	data := make([][]byte, b.N)
 	for i := 0; i < b.N; i++ {
 		data[i] = []byte(strconv.Itoa(i))

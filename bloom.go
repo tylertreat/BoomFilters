@@ -1,5 +1,5 @@
 /*
-Package stable implements a Stable Bloom Filter as described by Deng and
+Package bloom implements a Stable Bloom Filter as described by Deng and
 Rafiei in Approximately Detecting Duplicates for Streaming Data using Stable
 Bloom Filters (http://webdocs.cs.ualberta.ca/~drafiei/papers/DupDet06Sigmod.pdf).
 
@@ -11,7 +11,9 @@ the rate of false positives while introducing a non-zero rate of false
 negatives. The false-positive rate of a classic Bloom filter eventually reaches
 1, after which all queries result in a false positive. The stable-point
 property of an SBF means the false-positive rate asymptotically approaches a
-configurable fixed constant.
+configurable fixed constant. A classic Bloom filter is actually a special case
+of SBF where the eviction rate is zero, so this package provides support for
+them as well.
 
 Stable Bloom Filters are useful for cases where the size of the data set isn't
 known a priori, which is a requirement for traditional Bloom filters. For
@@ -19,7 +21,7 @@ example, an SBF can be used to deduplicate events from an unbounded event
 stream with a specified upper bound on false positives and minimal false
 negatives.
 */
-package stable
+package bloom
 
 import (
 	"encoding/binary"
@@ -29,9 +31,9 @@ import (
 	"math/rand"
 )
 
-// BloomFilter implements a Stable Bloom Filter (SBF). An SBF continuously
-// evicts stale information so that it has room for more recent elements.
-type BloomFilter struct {
+// Filter implements a Stable Bloom Filter (SBF). An SBF continuously evicts
+// stale information so that it has room for more recent elements.
+type Filter struct {
 	cells       []uint8
 	hash        hash.Hash64
 	m           uint
@@ -41,11 +43,11 @@ type BloomFilter struct {
 	indexBuffer []uint
 }
 
-// NewBloomFilter creates a new Stable Bloom Filter with m cells and k
+// NewStableFilter creates a new Stable Bloom Filter with m cells and k
 // hash functions. P indicates the number of cells to decrement in each
-// iteration. Use NewDefaultBloomFilter if you don't want to calculate
+// iteration. Use NewDefaultStableFilter if you don't want to calculate
 // these parameters.
-func NewBloomFilter(size, k, p uint, max uint8) *BloomFilter {
+func NewStableFilter(size, k, p uint, max uint8) *Filter {
 	if p > size {
 		p = size
 	}
@@ -54,7 +56,7 @@ func NewBloomFilter(size, k, p uint, max uint8) *BloomFilter {
 		k = size
 	}
 
-	return &BloomFilter{
+	return &Filter{
 		hash:        fnv.New64(),
 		m:           size,
 		k:           k,
@@ -65,27 +67,34 @@ func NewBloomFilter(size, k, p uint, max uint8) *BloomFilter {
 	}
 }
 
-// NewDefaultBloomFilter creates a new Stable Bloom Filter which is
-// optimized for cases where there is no prior knowledge of the input data
-// stream. The upper bound on the rate of false positives is 0.01.
-func NewDefaultBloomFilter(size uint) *BloomFilter {
-	return NewBloomFilter(size, 3, 10, 1)
+// NewDefaultStableFilter creates a new Stable Bloom Filter which is optimized
+// for cases where there is no prior knowledge of the input data stream. The
+// upper bound on the rate of false positives is 0.01.
+func NewDefaultStableFilter(size uint) *Filter {
+	return NewStableFilter(size, 3, 10, 1)
+}
+
+// NewFilter creates a new special case of Stable Bloom Filter which is a
+// traditional Bloom filter with k hash functions. Unlike the stable variant,
+// data is not evicted.
+func NewFilter(size, k uint) *Filter {
+	return NewStableFilter(size, k, 0, 1)
 }
 
 // Cells returns the number of cells in the Stable Bloom Filter.
-func (s *BloomFilter) Cells() uint {
+func (s *Filter) Cells() uint {
 	return s.m
 }
 
 // K returns the number of hash functions.
-func (s *BloomFilter) K() uint {
+func (s *Filter) K() uint {
 	return s.k
 }
 
 // StablePoint returns the limit of the expected fraction of zeros in the
 // Stable Bloom Filter when the number of iterations goes to infinity. When
 // this limit is reached, the Stable Bloom Filter is considered stable.
-func (s *BloomFilter) StablePoint() float64 {
+func (s *Filter) StablePoint() float64 {
 	var (
 		subDenom = float64(s.p) * (1/float64(s.k) - 1/float64(s.m))
 		denom    = 1 + 1/subDenom
@@ -98,7 +107,7 @@ func (s *BloomFilter) StablePoint() float64 {
 // Test will test for membership of the data and returns true if it is a
 // member, false if not. This is a probabilistic test, meaning there is a
 // non-zero probability of false positives and false negatives.
-func (s *BloomFilter) Test(data []byte) bool {
+func (s *Filter) Test(data []byte) bool {
 	lower, upper := s.hashKernel(data)
 	member := true
 
@@ -115,7 +124,7 @@ func (s *BloomFilter) Test(data []byte) bool {
 
 // Add will add the data to the Stable Bloom Filter. It returns the filter to
 // allow for chaining.
-func (s *BloomFilter) Add(data []byte) *BloomFilter {
+func (s *Filter) Add(data []byte) *Filter {
 	// Randomly decrement p cells to make room for new elements.
 	s.decrement()
 
@@ -131,7 +140,7 @@ func (s *BloomFilter) Add(data []byte) *BloomFilter {
 
 // TestAndAdd is equivalent to calling Test followed by Add. It returns true if
 // the data is a member, false if not.
-func (s *BloomFilter) TestAndAdd(data []byte) bool {
+func (s *Filter) TestAndAdd(data []byte) bool {
 	lower, upper := s.hashKernel(data)
 	member := true
 
@@ -156,7 +165,7 @@ func (s *BloomFilter) TestAndAdd(data []byte) bool {
 
 // Reset restores the Stable Bloom Filter to its original state. It returns the
 // filter to allow for chaining.
-func (s *BloomFilter) Reset() *BloomFilter {
+func (s *Filter) Reset() *Filter {
 	for i := uint(0); i < s.m; i++ {
 		s.cells[i] = 0
 	}
@@ -168,7 +177,7 @@ func (s *BloomFilter) Reset() *BloomFilter {
 // is faster than generating p random numbers. Although the processes of
 // picking the p cells are not independent, each cell has a probability of p/m
 // for being picked at each iteration, which means the properties still hold.
-func (s *BloomFilter) decrement() {
+func (s *Filter) decrement() {
 	r := rand.Intn(int(s.m))
 	for i := uint(0); i < s.p; i++ {
 		idx := (r + int(i)) % int(s.m)
@@ -180,7 +189,7 @@ func (s *BloomFilter) decrement() {
 
 // hashKernel returns the upper and lower base hash values from which the k
 // hashes are derived.
-func (s *BloomFilter) hashKernel(data []byte) (uint32, uint32) {
+func (s *Filter) hashKernel(data []byte) (uint32, uint32) {
 	s.hash.Write(data)
 	sum := s.hash.Sum(nil)
 	s.hash.Reset()
