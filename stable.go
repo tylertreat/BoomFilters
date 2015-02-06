@@ -102,6 +102,12 @@ func (s *StableBloomFilter) StablePoint() float64 {
 	return math.Pow(base, float64(s.max))
 }
 
+// FalsePositiveRate returns the upper bound on false positives when the filter
+// has become stable.
+func (s *StableBloomFilter) FalsePositiveRate() float64 {
+	return math.Pow(1-s.StablePoint(), float64(s.k))
+}
+
 // Test will test for membership of the data and returns true if it is a
 // member, false if not. This is a probabilistic test, meaning there is a
 // non-zero probability of false positives and false negatives.

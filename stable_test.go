@@ -143,9 +143,26 @@ func TestStablePoint(t *testing.T) {
 
 	// A classic Bloom filter is a special case of SBF where P is 0 and max is
 	// 1. It doesn't have a stable point.
-	bf := NewStableBloomFilter(1000, 3, 0, 1)
+	bf := NewBloomFilter(1000, 3)
 	if stablePoint := bf.StablePoint(); stablePoint != 0 {
 		t.Errorf("Expected stable point 0, got %f", stablePoint)
+	}
+}
+
+// Ensures that FalsePositiveRate returns the upper bound on false positives
+// for stable filters.
+func TestFalsePositiveRate(t *testing.T) {
+	f := NewDefaultStableBloomFilter(1000)
+	fps := round(f.FalsePositiveRate(), 0.5, 2)
+	if fps > 0.01 {
+		t.Errorf("Expected fps less than or equal to 0.01, got %f", fps)
+	}
+
+	// Classic Bloom filters have an unbounded rate of false positives. Once
+	// they become full, every query returns a false positive.
+	bf := NewBloomFilter(1000, 3)
+	if fps := bf.FalsePositiveRate(); fps != 1 {
+		t.Errorf("Expected fps 1, got %f", fps)
 	}
 }
 
