@@ -17,6 +17,8 @@ $ go get github.com/tylertreat/StableBloomFilter
 ## Usage
 
 ```go
+package main
+
 import (
     "fmt"
     "github.com/tylertreat/StableBloomFilter"
