@@ -12,7 +12,7 @@ import (
 // Rafiei in Approximately Detecting Duplicates for Streaming Data using Stable
 // Bloom Filters:
 //
-// http://webdocs.cs.ualberta.ca/~drafiei/papers/DupDet06Sigmod.pdf.
+// http://webdocs.cs.ualberta.ca/~drafiei/papers/DupDet06Sigmod.pdf
 //
 // A Stable Bloom Filter (SBF) continuously evicts stale information so that it
 // has room for more recent elements. Like traditional Bloom filters, an SBF
