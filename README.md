@@ -1,6 +1,6 @@
 # Boom Filters
 
-Boom Filters are probabilistic data structures for processing continuous, unbounded data streams. There are currently two structures implemented: Stable Bloom Filter and Inverse Bloom Filter. This also provides a traditional Bloom filter, which is actually a special case of a Stable Bloom Filter.
+Boom Filters are probabilistic data structures for processing continuous, unbounded data streams. These include Stable Bloom Filter, Inverse Bloom Filter, and several variants of traditional Bloom filters.
 
 Classic Bloom filters generally require a priori knowledge of the data set in order to allocate an appropriately sized bit array. This works well for offline processing, but online processing typically involves unbounded data streams. With enough data, a traditional Bloom filter "fills up", after which it has a false-positive probability of 1.
 
@@ -54,7 +54,9 @@ func main() {
 
 ## Classic Bloom Filter
 
-A classic Bloom filter is a special case of a Stable Bloom Filter whose eviction rate is zero and cell size is one. We call this special case an Unstable Bloom Filter. Because cells require more memory overhead, this package also provides a bitset-based Bloom filter. Bloom filters have a limited capacity, depending on the configured size. Once all bits are set, the probability of a false positive is 1. However, traditional Bloom filters cannot return a false negative.
+A classic Bloom filter is a special case of a Stable Bloom Filter whose eviction rate is zero and cell size is one. We call this special case an Unstable Bloom Filter. Because cells require more memory overhead, this package also provides two bitset-based Bloom filter variations. The first variation is the traditional implementation consisting of a single bit array. The second implementation is a partitioned approach which uniformly distributes the probability of false positives across all elements.
+
+Bloom filters have a limited capacity, depending on the configured size. Once all bits are set, the probability of a false positive is 1. However, traditional Bloom filters cannot return a false negative.
 
 A Bloom filter is ideal for cases where the data set is known a priori because the false-positive rate can be configured by the size and number of hash functions.
 
@@ -69,7 +71,7 @@ import (
 )
 
 func main() {
-    // We can also use boom.NewUnstableBloomFilter for the SBF variant.
+    // We could also use boom.NewUnstableBloomFilter or boom.NewPartitionedBloomFilter.
     bf := boom.NewBloomFilter(1000, 0.01)
     
     bf.Add([]byte(`a`))
