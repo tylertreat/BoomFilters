@@ -1,6 +1,6 @@
 # Boom Filters
 
-Boom Filters contains probabilistic data structures for processing continuous, unbounded data streams in Go. There are currently two structures implemented: Stable Bloom Filter and Inverse Bloom Filter. This also provides a traditional Bloom filter, which is actually a special case of a Stable Bloom Filter.
+Boom Filters are probabilistic data structures for processing continuous, unbounded data streams in Go. There are currently two structures implemented: Stable Bloom Filter and Inverse Bloom Filter. This also provides a traditional Bloom filter, which is actually a special case of a Stable Bloom Filter.
 
 Classic Bloom filters generally require a priori knowledge of the data set in order to allocate an appropriately sized bit array. This works well for offline processing, but online processing typically involves unbounded data streams. With enough data, a traditional Bloom filter "fills up", after which it has a false-positive probability of 1.
 
