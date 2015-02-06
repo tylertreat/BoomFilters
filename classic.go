@@ -71,7 +71,7 @@ func (b *BloomFilter) Add(data []byte) *BloomFilter {
 	return b
 }
 
-// TestAndSet is equivalent to calling Test followed by Add. It returns true if
+// TestAndAdd is equivalent to calling Test followed by Add. It returns true if
 // the data is a member, false if not.
 func (b *BloomFilter) TestAndAdd(data []byte) bool {
 	lower, upper := b.hashKernel(data)
