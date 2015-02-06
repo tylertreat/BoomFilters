@@ -117,12 +117,7 @@ func (s *BloomFilter) Test(data []byte) bool {
 // allow for chaining.
 func (s *BloomFilter) Add(data []byte) *BloomFilter {
 	// Randomly decrement p cells to make room for new elements.
-	for i := uint(0); i < s.p; i++ {
-		idx := rand.Intn(int(s.m))
-		if s.cells[idx] >= 1 {
-			s.cells[idx]--
-		}
-	}
+	s.decrement()
 
 	lower, upper := s.hashKernel(data)
 
@@ -149,12 +144,7 @@ func (s *BloomFilter) TestAndAdd(data []byte) bool {
 	}
 
 	// Randomly decrement p cells to make room for new elements.
-	for i := uint(0); i < s.p; i++ {
-		idx := rand.Intn(int(s.m))
-		if s.cells[idx] >= 1 {
-			s.cells[idx]--
-		}
-	}
+	s.decrement()
 
 	// Set the K cells to max.
 	for _, idx := range s.indexBuffer {
@@ -172,6 +162,21 @@ func (s *BloomFilter) Reset() *BloomFilter {
 	}
 
 	return s
+}
+
+// decrement will decrement a random cell and (p-1) adjacent cells by 1. This
+// is faster than generating p random numbers. Although the processes of
+// picking the p cells are not independent, each cell has a probability of p/m
+// for being picked at each iteration, which means the properties still hold.
+func (s *BloomFilter) decrement() {
+	r := rand.Intn(int(s.m))
+	for i := uint(0); i < s.p; i++ {
+		idx := (r + int(i)) % int(s.m)
+		//fmt.Println("p", idx)
+		if s.cells[idx] >= 1 {
+			s.cells[idx]--
+		}
+	}
 }
 
 // hashKernel returns the upper and lower base hash values from which the k
