@@ -72,10 +72,10 @@ func NewDefaultStableBloomFilter(size uint) *StableBloomFilter {
 	return NewStableBloomFilter(size, 3, 10, 1)
 }
 
-// NewBloomFilter creates a new special case of Stable Bloom Filter which is a
-// traditional Bloom filter with k hash functions. Unlike the stable variant,
-// data is not evicted.
-func NewBloomFilter(size, k uint) *StableBloomFilter {
+// NewUnstableBloomFilter creates a new special case of Stable Bloom Filter
+// which is a traditional Bloom filter with k hash functions. Unlike the stable
+// variant, data is not evicted and a cell contains a maximum of 1 hash value.
+func NewUnstableBloomFilter(size, k uint) *StableBloomFilter {
 	return NewStableBloomFilter(size, k, 0, 1)
 }
 
