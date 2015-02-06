@@ -100,7 +100,7 @@ func TestTestAndAdd(t *testing.T) {
 // Ensures that StablePoint returns the expected fraction of zeros for large
 // iterations.
 func TestStablePoint(t *testing.T) {
-	f := NewDefaultBloomFilter(1000)
+	f := NewBloomFilter(1000, 3, 15, 1)
 	for i := 0; i < 1000000; i++ {
 		f.Add([]byte(strconv.Itoa(i)))
 	}
