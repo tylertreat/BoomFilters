@@ -32,35 +32,35 @@ import (
 // events from an unbounded event stream with a specified upper bound on false
 // positives and minimal false negatives.
 type StableBloomFilter struct {
-	cells       []uint8
-	hash        hash.Hash
-	m           uint
-	p           uint
-	k           uint
-	max         uint8
-	indexBuffer []uint
+	cells       []uint8   // filter data
+	hash        hash.Hash // hash function (kernel for all k functions)
+	m           uint      // number of cells
+	p           uint      // number of cells to decrement
+	k           uint      // number of hash functions
+	max         uint8     // cell max value
+	indexBuffer []uint    // buffer used to cache indices
 }
 
 // NewStableBloomFilter creates a new Stable Bloom Filter with m cells and k
 // hash functions. P indicates the number of cells to decrement in each
 // iteration. Use NewDefaultStableFilter if you don't want to calculate
 // these parameters.
-func NewStableBloomFilter(size, k, p uint, max uint8) *StableBloomFilter {
-	if p > size {
-		p = size
+func NewStableBloomFilter(m, k, p uint, max uint8) *StableBloomFilter {
+	if p > m {
+		p = m
 	}
 
-	if k > size {
-		k = size
+	if k > m {
+		k = m
 	}
 
 	return &StableBloomFilter{
 		hash:        fnv.New64(),
-		m:           size,
+		m:           m,
 		k:           k,
 		p:           p,
 		max:         max,
-		cells:       make([]uint8, size),
+		cells:       make([]uint8, m),
 		indexBuffer: make([]uint, k),
 	}
 }
@@ -116,8 +116,7 @@ func (s *StableBloomFilter) Test(data []byte) bool {
 
 	// If any of the K cells are 0, then it's not a member.
 	for i := uint(0); i < s.k; i++ {
-		s.indexBuffer[i] = (uint(lower) + uint(upper)*i) % s.m
-		if s.cells[s.indexBuffer[i]] == 0 {
+		if s.cells[(uint(lower)+uint(upper)*i)%s.m] == 0 {
 			return false
 		}
 	}
