@@ -21,7 +21,7 @@ import (
 // the distribution of false positives is uniform across all elements.
 type PartitionedBloomFilter struct {
 	partitions []*bitset.BitSet // partitioned filter data
-	hash       hash.Hash        // hash function (kernel for all k functions)
+	hash       hash.Hash64      // hash function (kernel for all k functions)
 	m          uint             // filter size (divided into k partitions)
 	k          uint             // number of hash functions (and partitions)
 	s          uint             // partition size (m / k)

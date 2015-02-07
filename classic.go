@@ -12,7 +12,7 @@ import (
 // probability of false positives and a zero probability of false negatives.
 type BloomFilter struct {
 	array *bitset.BitSet // filter data
-	hash  hash.Hash      // hash function (kernel for all k functions)
+	hash  hash.Hash64    // hash function (kernel for all k functions)
 	m     uint           // filter size
 	k     uint           // number of hash functions
 }

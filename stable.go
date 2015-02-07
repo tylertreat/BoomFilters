@@ -32,13 +32,13 @@ import (
 // events from an unbounded event stream with a specified upper bound on false
 // positives and minimal false negatives.
 type StableBloomFilter struct {
-	cells       []uint8   // filter data
-	hash        hash.Hash // hash function (kernel for all k functions)
-	m           uint      // number of cells
-	p           uint      // number of cells to decrement
-	k           uint      // number of hash functions
-	max         uint8     // cell max value
-	indexBuffer []uint    // buffer used to cache indices
+	cells       []uint8     // filter data
+	hash        hash.Hash64 // hash function (kernel for all k functions)
+	m           uint        // number of cells
+	p           uint        // number of cells to decrement
+	k           uint        // number of hash functions
+	max         uint8       // cell max value
+	indexBuffer []uint      // buffer used to cache indices
 }
 
 // NewStableBloomFilter creates a new Stable Bloom Filter with m cells and k
