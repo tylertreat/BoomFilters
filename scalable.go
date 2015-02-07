@@ -1,10 +1,6 @@
 package boom
 
-import (
-	"hash"
-	"hash/fnv"
-	"math"
-)
+import "math"
 
 // ScalableBloomFilter implements a Scalable Bloom Filter as described by
 // Almeida, Baquero, Preguica, and Hutchison in Scalable Bloom Filters:
@@ -24,7 +20,6 @@ import (
 // Bloom Filters.
 type ScalableBloomFilter struct {
 	filters []*PartitionedBloomFilter // filters with geometrically decreasing error rates
-	hash    hash.Hash                 // hash function (kernel for all k functions)
 	r       float64                   // tightening ratio
 	fp      float64                   // target false-positive rate
 	p       float64                   // partition fill ratio
@@ -38,7 +33,6 @@ type ScalableBloomFilter struct {
 func NewScalableBloomFilter(hint uint, fpRate, r float64) *ScalableBloomFilter {
 	s := &ScalableBloomFilter{
 		filters: make([]*PartitionedBloomFilter, 0, 1),
-		hash:    fnv.New64(),
 		r:       r,
 		fp:      fpRate,
 		p:       fillRatio,
