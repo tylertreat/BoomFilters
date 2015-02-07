@@ -32,8 +32,9 @@ func (b *Buckets) Count() uint {
 
 // Increment will increment the value in the specified bucket by the provided
 // delta. A bucket can be decremented by providing a negative delta. The value
-// is clamped to zero and the maximum bucket value.
-func (b *Buckets) Increment(bucket uint, delta int32) {
+// is clamped to zero and the maximum bucket value. Returns itself to allow for
+// chaining.
+func (b *Buckets) Increment(bucket uint, delta int32) *Buckets {
 	val := int32(b.getBits(bucket*uint(b.bucketSize), uint(b.bucketSize))) + delta
 	if val > int32(b.max) {
 		val = int32(b.max)
@@ -42,19 +43,18 @@ func (b *Buckets) Increment(bucket uint, delta int32) {
 	}
 
 	b.setBits(uint32(bucket)*uint32(b.bucketSize), uint32(b.bucketSize), uint32(val))
+	return b
 }
 
 // Set will set the bucket value. The value is clamped to zero and the maximum
-// bucket value.
-func (b *Buckets) Set(bucket uint, value uint8) {
-	val := uint32(value)
-	if val > uint32(b.max) {
-		val = uint32(b.max)
-	} else if val < 0 {
-		val = 0
+// bucket value. Returns itself to allow for chaining.
+func (b *Buckets) Set(bucket uint, value uint8) *Buckets {
+	if value > b.max {
+		value = b.max
 	}
 
-	b.setBits(uint32(bucket)*uint32(b.bucketSize), uint32(b.bucketSize), val)
+	b.setBits(uint32(bucket)*uint32(b.bucketSize), uint32(b.bucketSize), uint32(value))
+	return b
 }
 
 // Get returns the value in the specified bucket.
@@ -62,16 +62,17 @@ func (b *Buckets) Get(bucket uint) uint32 {
 	return b.getBits(bucket*uint(b.bucketSize), uint(b.bucketSize))
 }
 
-// Reset restores the Buckets to the original state.
-func (b *Buckets) Reset() {
+// Reset restores the Buckets to the original state. Returns itself to allow
+// for chaining.
+func (b *Buckets) Reset() *Buckets {
 	b.data = make([]byte, (b.count*uint(b.bucketSize)+7)/8)
+	return b
 }
 
 // getBits returns the bits at the specified offset and length.
 func (b *Buckets) getBits(offset, length uint) uint32 {
 	byteIndex := offset / 8
 	byteOffset := offset % 8
-	// Recurse if we're crossing a byte boundary.
 	if byteOffset+length > 8 {
 		rem := 8 - byteOffset
 		return b.getBits(offset, rem) | (b.getBits(offset+rem, length-rem) << rem)
@@ -84,7 +85,6 @@ func (b *Buckets) getBits(offset, length uint) uint32 {
 func (b *Buckets) setBits(offset, length, bits uint32) {
 	byteIndex := offset / 8
 	byteOffset := offset % 8
-	// Recurse if we're crossing a byte boundary.
 	if byteOffset+length > 8 {
 		rem := 8 - byteOffset
 		b.setBits(offset, rem, bits)
