@@ -122,3 +122,10 @@ func main() {
     }
 }
 ```
+
+## References
+
+- [Approximately Detecting Duplicates for Streaming Data using Stable Bloom Filters](http://webdocs.cs.ualberta.ca/~drafiei/papers/DupDet06Sigmod.pdf)
+- [Scalable Bloom Filters](http://gsd.di.uminho.pt/members/cbm/ps/dbloom.pdf)
+- [The Opposite of a Bloom Filter](http://www.somethingsimilar.com/2012/05/21/the-opposite-of-a-bloom-filter/)
+- [Benchmarking Bloom Filters and Hash Functions in Go](http://zhen.org/blog/benchmarking-bloom-filters-and-hash-functions-in-go/)
