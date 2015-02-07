@@ -1,10 +1,10 @@
 # Boom Filters
 
-Boom Filters are probabilistic data structures for processing continuous, unbounded data streams. These include Stable Bloom Filter, Inverse Bloom Filter, and several variants of traditional Bloom filters.
+**Boom Filters** are probabilistic data structures for processing continuous, unbounded data streams. This includes **Stable Bloom Filters**, **Scalable Bloom Filters**, **Inverse Bloom Filters**, and several variants of traditional Bloom filters.
 
 Classic Bloom filters generally require a priori knowledge of the data set in order to allocate an appropriately sized bit array. This works well for offline processing, but online processing typically involves unbounded data streams. With enough data, a traditional Bloom filter "fills up", after which it has a false-positive probability of 1.
 
-Boom Filters are useful for cases where the size of the data set isn't known ahead of time. For example, a Stable Bloom Filter can be used to deduplicate events from an unbounded event stream with a specified upper bound on false positives and minimal false negatives. Alternatively, an Inverse Bloom Filter is ideal for deduplicating a stream where duplicate events are relatively close together. This results in no false positives and, depending on how close together duplicates are, a small probability of false negatives. Scalable Bloom Filters place a tight upper bound on false positives while avoiding false negatives but require allocating memory proportional to the size of the data set.
+Boom Filters are useful for situations where the size of the data set isn't known ahead of time. For example, a Stable Bloom Filter can be used to deduplicate events from an unbounded event stream with a specified upper bound on false positives and minimal false negatives. Alternatively, an Inverse Bloom Filter is ideal for deduplicating a stream where duplicate events are relatively close together. This results in no false positives and, depending on how close together duplicates are, a small probability of false negatives. Scalable Bloom Filters place a tight upper bound on false positives while avoiding false negatives but require allocating memory proportional to the size of the data set.
 
 For documentation, see [godoc](http://godoc.org/github.com/tylertreat/BoomFilters).
 
@@ -52,6 +52,37 @@ func main() {
 }
 ```
 
+## Inverse Bloom Filter
+
+An Inverse Bloom Filter, or "the opposite of a Bloom filter", is a concurrent, probabilistic data structure used to test whether an item has been observed or not. This implementation, [originally described and written by Jeff Hodges](http://www.somethingsimilar.com/2012/05/21/the-opposite-of-a-bloom-filter/), replaces the use of MD5 hashing with a non-cryptographic FNV-1a function.
+
+The Inverse Bloom Filter may report a false negative but can never report a false positive. That is, it may report that an item has not been seen when it actually has, but it will never report an item as seen which it hasn't come across. This behaves in a similar manner to a fixed-size hashmap which does not handle conflicts.
+
+This structure is particularly well-suited to streams in which duplicates are relatively close together.
+
+### Usage
+
+```go
+package main
+
+import (
+    "fmt"
+    "github.com/tylertreat/BoomFilters"
+)
+
+func main() {
+    ibf := boom.NewInverseBloomFilter(10000)
+    
+    if !ibf.Observe([]byte(`a`)) {
+        fmt.Println("haven't observed a")
+    }
+    
+    if ibf.Observe([]byte(`a`)) {
+        fmt.Println("observed a")
+    }
+}
+```
+
 ## Classic Bloom Filter
 
 A classic Bloom filter is a special case of a Stable Bloom Filter whose eviction rate is zero and cell size is one. We call this special case an Unstable Bloom Filter. Because cells require more memory overhead, this package also provides two bitset-based Bloom filter variations. The first variation is the traditional implementation consisting of a single bit array. The second implementation is a partitioned approach which uniformly distributes the probability of false positives across all elements.
@@ -89,37 +120,6 @@ func main() {
     
     // Restore to initial state.
     bf.Reset()
-}
-```
-
-## Inverse Bloom Filter
-
-An Inverse Bloom Filter, or "the opposite of a Bloom filter", is a concurrent, probabilistic data structure used to test whether an item has been observed or not. This implementation, [originally described and written by Jeff Hodges](http://www.somethingsimilar.com/2012/05/21/the-opposite-of-a-bloom-filter/), replaces the use of MD5 hashing with a non-cryptographic FNV-1a function.
-
-The Inverse Bloom Filter may report a false negative but can never report a false positive. That is, it may report that an item has not been seen when it actually has, but it will never report an item as seen which it hasn't come across. This behaves in a similar manner to a fixed-size hashmap which does not handle conflicts.
-
-This structure is particularly well-suited to streams in which duplicates are relatively close together.
-
-### Usage
-
-```go
-package main
-
-import (
-    "fmt"
-    "github.com/tylertreat/BoomFilters"
-)
-
-func main() {
-    ibf := boom.NewInverseBloomFilter(10000)
-    
-    if !ibf.Observe([]byte(`a`)) {
-        fmt.Println("haven't observed a")
-    }
-    
-    if ibf.Observe([]byte(`a`)) {
-        fmt.Println("observed a")
-    }
 }
 ```
 
