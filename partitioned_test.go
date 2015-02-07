@@ -23,6 +23,30 @@ func TestPartitionedBloomK(t *testing.T) {
 	}
 }
 
+// Ensures that Count returns the number of items added to the filter.
+func TestPartitionedCount(t *testing.T) {
+	f := NewPartitionedBloomFilter(100, 0.1)
+	for i := 0; i < 10; i++ {
+		f.Add([]byte(strconv.Itoa(i)))
+	}
+
+	if count := f.Count(); count != 10 {
+		t.Errorf("Expected 10, got %d", count)
+	}
+}
+
+// Ensures that EstimatedFillRatio returns the correct approximation.
+func TestPartitionedEstimatedFillRatio(t *testing.T) {
+	f := NewPartitionedBloomFilter(100, 0.5)
+	for i := 0; i < 100; i++ {
+		f.Add([]byte(strconv.Itoa(i)))
+	}
+
+	if ratio := f.EstimatedFillRatio(); ratio > 0.5 {
+		t.Errorf("Expected less than or equal to 0.5, got %f", ratio)
+	}
+}
+
 // Ensures that FillRatio returns the ratio of set bits.
 func TestPartitionedFillRatio(t *testing.T) {
 	f := NewPartitionedBloomFilter(100, 0.1)
@@ -100,8 +124,10 @@ func TestPartitionedBloomReset(t *testing.T) {
 	}
 
 	for _, partition := range f.partitions {
-		if partition.Any() {
-			t.Error("Expected all bits to be unset")
+		for i := uint(0); i < partition.Count(); i++ {
+			if partition.Get(0) != 0 {
+				t.Error("Expected all bits to be unset")
+			}
 		}
 	}
 }

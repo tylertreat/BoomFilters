@@ -48,19 +48,19 @@ func TestScalableBloomK(t *testing.T) {
 // Ensures that FillRatio returns the average fill ratio of the contained
 // filters.
 func TestScalableFillRatio(t *testing.T) {
-	f := NewScalableBloomFilter(1, 0.1, 0.8)
-	for i := 0; i < 100; i++ {
+	f := NewScalableBloomFilter(100, 0.1, 0.8)
+	for i := 0; i < 200; i++ {
 		f.Add([]byte(strconv.Itoa(i)))
 	}
 
-	if ratio := f.FillRatio(); ratio != 0.5 {
-		t.Errorf("Expected 0.5, got %f", ratio)
+	if ratio := f.FillRatio(); ratio > 0.5 {
+		t.Errorf("Expected less than or equal to 0.5, got %f", ratio)
 	}
 }
 
 // Ensures that Test, Add, and TestAndAdd behave correctly.
 func TestScalableBloomTestAndAdd(t *testing.T) {
-	f := NewScalableBloomFilter(100, 0.01, 0.8)
+	f := NewScalableBloomFilter(1000, 0.01, 0.8)
 
 	// `a` isn't in the filter.
 	if f.Test([]byte(`a`)) {
@@ -131,8 +131,10 @@ func TestScalableBloomReset(t *testing.T) {
 	}
 
 	for _, partition := range f.filters[0].partitions {
-		if partition.Any() {
-			t.Error("Expected all bits to be unset")
+		for i := uint(0); i < partition.Count(); i++ {
+			if partition.Get(i) != 0 {
+				t.Error("Expected all bits to be unset")
+			}
 		}
 	}
 }

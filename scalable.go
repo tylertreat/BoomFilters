@@ -110,7 +110,7 @@ func (s *ScalableBloomFilter) Add(data []byte) *ScalableBloomFilter {
 	idx := len(s.filters) - 1
 
 	// If the last filter has reached its fill ratio, add a new one.
-	if s.filters[idx].FillRatio() >= s.p {
+	if s.filters[idx].EstimatedFillRatio() >= s.p {
 		s.addFilter()
 		idx++
 	}

@@ -20,8 +20,6 @@ import (
 	"hash"
 	"hash/fnv"
 	"math"
-
-	"github.com/willf/bitset"
 )
 
 // PartitionedBloomFilter implements a variation of a classic Bloom filter as
@@ -35,11 +33,12 @@ import (
 // respective slice. Thus, each element is described by exactly k bits, meaning
 // the distribution of false positives is uniform across all elements.
 type PartitionedBloomFilter struct {
-	partitions []*bitset.BitSet // partitioned filter data
-	hash       hash.Hash64      // hash function (kernel for all k functions)
-	m          uint             // filter size (divided into k partitions)
-	k          uint             // number of hash functions (and partitions)
-	s          uint             // partition size (m / k)
+	partitions []*Buckets  // partitioned filter data
+	hash       hash.Hash64 // hash function (kernel for all k functions)
+	m          uint        // filter size (divided into k partitions)
+	k          uint        // number of hash functions (and partitions)
+	s          uint        // partition size (m / k)
+	count      uint        // number of items added
 }
 
 // NewPartitionedBloomFilter creates a new partitioned Bloom filter optimized
@@ -48,12 +47,12 @@ func NewPartitionedBloomFilter(n uint, fpRate float64) *PartitionedBloomFilter {
 	var (
 		m          = OptimalM(n, fpRate)
 		k          = OptimalK(fpRate)
-		partitions = make([]*bitset.BitSet, k)
+		partitions = make([]*Buckets, k)
 		s          = uint(math.Ceil(float64(m) / float64(k)))
 	)
 
 	for i := uint(0); i < k; i++ {
-		partitions[i] = bitset.New(s)
+		partitions[i] = NewBuckets(s, 1)
 	}
 
 	return &PartitionedBloomFilter{
@@ -75,11 +74,25 @@ func (p *PartitionedBloomFilter) K() uint {
 	return p.k
 }
 
+// Count returns the number of items added to the filter.
+func (p *PartitionedBloomFilter) Count() uint {
+	return p.count
+}
+
+// EstimatedFillRatio returns the current estimated ratio of set bits.
+func (p *PartitionedBloomFilter) EstimatedFillRatio() float64 {
+	return 1 - math.Exp(-float64(p.count)/float64(p.s))
+}
+
 // FillRatio returns the average ratio of set bits across all partitions.
 func (p *PartitionedBloomFilter) FillRatio() float64 {
 	t := float64(0)
 	for i := uint(0); i < p.k; i++ {
-		t += (float64(p.partitions[i].Count()) / float64(p.s))
+		sum := uint32(0)
+		for j := uint(0); j < p.partitions[i].Count(); j++ {
+			sum += p.partitions[i].Get(j)
+		}
+		t += (float64(sum) / float64(p.s))
 	}
 	return t / float64(p.k)
 }
@@ -94,7 +107,7 @@ func (p *PartitionedBloomFilter) Test(data []byte) bool {
 
 	// If any of the K partition bits are not set, then it's not a member.
 	for i := uint(0); i < p.k; i++ {
-		if !p.partitions[i].Test((uint(lower) + uint(upper)*i) % p.s) {
+		if p.partitions[i].Get((uint(lower)+uint(upper)*i)%p.s) == 0 {
 			return false
 		}
 	}
@@ -109,9 +122,10 @@ func (p *PartitionedBloomFilter) Add(data []byte) *PartitionedBloomFilter {
 
 	// Set the K partition bits.
 	for i := uint(0); i < p.k; i++ {
-		p.partitions[i].Set((uint(lower) + uint(upper)*i) % p.s)
+		p.partitions[i].Set((uint(lower)+uint(upper)*i)%p.s, 1)
 	}
 
+	p.count++
 	return p
 }
 
@@ -124,12 +138,13 @@ func (p *PartitionedBloomFilter) TestAndAdd(data []byte) bool {
 	// If any of the K partition bits are not set, then it's not a member.
 	for i := uint(0); i < p.k; i++ {
 		idx := (uint(lower) + uint(upper)*i) % p.s
-		if !p.partitions[i].Test(idx) {
+		if p.partitions[i].Get(idx) == 0 {
 			member = false
 		}
-		p.partitions[i].Set(idx)
+		p.partitions[i].Set(idx, 1)
 	}
 
+	p.count++
 	return member
 }
 
@@ -137,7 +152,7 @@ func (p *PartitionedBloomFilter) TestAndAdd(data []byte) bool {
 // to allow for chaining.
 func (p *PartitionedBloomFilter) Reset() *PartitionedBloomFilter {
 	for _, partition := range p.partitions {
-		partition.ClearAll()
+		partition.Reset()
 	}
 	return p
 }
