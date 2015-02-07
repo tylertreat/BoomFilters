@@ -1,6 +1,6 @@
 # Boom Filters
 
-**Boom Filters** are probabilistic data structures for processing continuous, unbounded data streams. This includes **Stable Bloom Filters**, **Scalable Bloom Filters**, **Inverse Bloom Filters**, and several variants of traditional Bloom filters.
+**Boom Filters** are probabilistic data structures for processing continuous, unbounded data streams. This includes **Stable Bloom Filters**, **Scalable Bloom Filters**, **Inverse Bloom Filters**, and several variants of **traditional Bloom filters**.
 
 Classic Bloom filters generally require a priori knowledge of the data set in order to allocate an appropriately sized bit array. This works well for offline processing, but online processing typically involves unbounded data streams. With enough data, a traditional Bloom filter "fills up", after which it has a false-positive probability of 1.
 
@@ -20,6 +20,8 @@ This is an implementation of Stable Bloom Filters as described by Deng and Rafie
 
 A Stable Bloom Filter (SBF) continuously evicts stale information so that it has room for more recent elements. Like traditional Bloom filters, an SBF has a non-zero probability of false positives, which is controlled by several parameters. Unlike the classic Bloom filter, an SBF has a tight upper bound on the rate of false positives while introducing a non-zero rate of false negatives. The false-positive rate of a classic Bloom filter eventually reaches 1, after which all queries result in a false positive. The stable-point property of an SBF means the false-positive rate asymptotically approaches a configurable fixed constant. A classic Bloom filter is actually a special case of SBF where the eviction rate is zero and the cell size is one, so this provides support for them as well (in addition to bitset-based Bloom filters).
 
+Stable Bloom Filters are useful for cases where the size of the data set isn't known a priori and memory is bounded. For example, an SBF can be used to deduplicate events from an unbounded event stream with a specified upper bound on false positives and minimal false negatives.
+
 ### Usage
 
 ```go
@@ -33,6 +35,45 @@ import (
 func main() {
     sbf := boom.NewDefaultStableBloomFilter(10000)
     fmt.Println("stable point", sbf.StablePoint())
+    
+    sbf.Add([]byte(`a`))
+    if sbf.Test([]byte(`a`)) {
+        fmt.Println("contains a")
+    }
+    
+    if !sbf.TestAndAdd([]byte(`b`)) {
+        fmt.Println("doesn't contain b")
+    }
+    
+    if sbf.Test([]byte(`b`)) {
+        fmt.Println("now it contains b!")
+    }
+    
+    // Restore to initial state.
+    sbf.Reset()
+}
+```
+
+## Scalable Bloom Filter
+
+This is an implementation of a Scalable Bloom Filter as described by Almeida, Baquero, Preguica, and Hutchison in [Scalable Bloom Filters](http://gsd.di.uminho.pt/members/cbm/ps/dbloom.pdf).
+
+A Scalable Bloom Filter (SBF) dynamically adapts to the size of the data set while enforcing a tight upper bound on the rate of false positives and a false-negative probability of zero. This works by adding Bloom filters with geometrically decreasing false-positive rates as filters become full. A tightening ratio, r, controls the filter growth. The compounded probability over the whole series converges to a target value, even accounting for an infinite series.
+
+Scalable Bloom Filters are useful for cases where the size of the data set isn't known a priori and memory constraints aren't of particular concern. For situations where memory is bounded, consider using Inverse or Stable Bloom Filters.
+
+### Usage
+
+```go
+package main
+
+import (
+    "fmt"
+    "github.com/tylertreat/BoomFilters"
+)
+
+func main() {
+    sbf := boom.NewDefaultScalableBloomFilter(0.01)
     
     sbf.Add([]byte(`a`))
     if sbf.Test([]byte(`a`)) {
