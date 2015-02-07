@@ -24,7 +24,6 @@ type PartitionedBloomFilter struct {
 	hash       hash.Hash        // hash function (kernel for all k functions)
 	m          uint             // filter size (divided into k partitions)
 	k          uint             // number of hash functions (and partitions)
-	p          float64          // partition fill ratio
 	s          uint             // partition size (m / k)
 }
 
@@ -47,7 +46,6 @@ func NewPartitionedBloomFilter(n uint, fpRate float64) *PartitionedBloomFilter {
 		hash:       fnv.New64(),
 		m:          m,
 		k:          k,
-		p:          fillRatio,
 		s:          s,
 	}
 }
