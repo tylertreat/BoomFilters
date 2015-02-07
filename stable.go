@@ -32,7 +32,7 @@ import (
 // events from an unbounded event stream with a specified upper bound on false
 // positives and minimal false negatives.
 type StableBloomFilter struct {
-	cells       []uint8     // filter data
+	cells       *Buckets    // filter data
 	hash        hash.Hash64 // hash function (kernel for all k functions)
 	m           uint        // number of cells
 	p           uint        // number of cells to decrement
@@ -42,10 +42,10 @@ type StableBloomFilter struct {
 }
 
 // NewStableBloomFilter creates a new Stable Bloom Filter with m cells and k
-// hash functions. P indicates the number of cells to decrement in each
-// iteration. Use NewDefaultStableFilter if you don't want to calculate
-// these parameters.
-func NewStableBloomFilter(m, k, p uint, max uint8) *StableBloomFilter {
+// hash functions. D is the number of bits allocated per cell. P indicates the
+// number of cells to decrement in each iteration. Use NewDefaultStableFilter
+// if you don't want to calculate these parameters.
+func NewStableBloomFilter(m, k, p uint, d uint8) *StableBloomFilter {
 	if p > m {
 		p = m
 	}
@@ -54,13 +54,15 @@ func NewStableBloomFilter(m, k, p uint, max uint8) *StableBloomFilter {
 		k = m
 	}
 
+	cells := NewBuckets(m, d)
+
 	return &StableBloomFilter{
 		hash:        fnv.New64(),
 		m:           m,
 		k:           k,
 		p:           p,
-		max:         max,
-		cells:       make([]uint8, m),
+		max:         cells.MaxBucketValue(),
+		cells:       cells,
 		indexBuffer: make([]uint, k),
 	}
 }
@@ -117,7 +119,7 @@ func (s *StableBloomFilter) Test(data []byte) bool {
 
 	// If any of the K cells are 0, then it's not a member.
 	for i := uint(0); i < s.k; i++ {
-		if s.cells[(uint(lower)+uint(upper)*i)%s.m] == 0 {
+		if s.cells.Get((uint(lower)+uint(upper)*i)%s.m) == 0 {
 			return false
 		}
 	}
@@ -135,7 +137,7 @@ func (s *StableBloomFilter) Add(data []byte) *StableBloomFilter {
 
 	// Set the K cells to max.
 	for i := uint(0); i < s.k; i++ {
-		s.cells[(uint(lower)+uint(upper)*i)%s.m] = s.max
+		s.cells.Set((uint(lower)+uint(upper)*i)%s.m, s.max)
 	}
 
 	return s
@@ -150,7 +152,7 @@ func (s *StableBloomFilter) TestAndAdd(data []byte) bool {
 	// If any of the K cells are 0, then it's not a member.
 	for i := uint(0); i < s.k; i++ {
 		s.indexBuffer[i] = (uint(lower) + uint(upper)*i) % s.m
-		if s.cells[s.indexBuffer[i]] == 0 {
+		if s.cells.Get(s.indexBuffer[i]) == 0 {
 			member = false
 		}
 	}
@@ -160,7 +162,7 @@ func (s *StableBloomFilter) TestAndAdd(data []byte) bool {
 
 	// Set the K cells to max.
 	for _, idx := range s.indexBuffer {
-		s.cells[idx] = s.max
+		s.cells.Set(idx, s.max)
 	}
 
 	return member
@@ -169,10 +171,7 @@ func (s *StableBloomFilter) TestAndAdd(data []byte) bool {
 // Reset restores the Stable Bloom Filter to its original state. It returns the
 // filter to allow for chaining.
 func (s *StableBloomFilter) Reset() *StableBloomFilter {
-	for i := uint(0); i < s.m; i++ {
-		s.cells[i] = 0
-	}
-
+	s.cells.Reset()
 	return s
 }
 
@@ -184,9 +183,7 @@ func (s *StableBloomFilter) decrement() {
 	r := rand.Intn(int(s.m))
 	for i := uint(0); i < s.p; i++ {
 		idx := (r + int(i)) % int(s.m)
-		if s.cells[idx] >= 1 {
-			s.cells[idx]--
-		}
+		s.cells.Increment(uint(idx), -1)
 	}
 }
 

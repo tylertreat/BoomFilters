@@ -128,13 +128,13 @@ func TestStablePoint(t *testing.T) {
 	}
 
 	zeros := 0
-	for _, cell := range f.cells {
-		if cell == 0 {
+	for i := uint(0); i < f.m; i++ {
+		if f.cells.Get(i) == 0 {
 			zeros++
 		}
 	}
 
-	actual := round(float64(zeros)/float64(len(f.cells)), 0.5, 1)
+	actual := round(float64(zeros)/float64(f.m), 0.5, 1)
 	expected := round(f.StablePoint(), 0.5, 1)
 
 	if actual < expected {
@@ -177,8 +177,8 @@ func TestReset(t *testing.T) {
 		t.Error("Returned StableBloomFilter should be the same instance")
 	}
 
-	for _, cell := range f.cells {
-		if cell != 0 {
+	for i := uint(0); i < f.m; i++ {
+		if cell := f.cells.Get(i); cell != 0 {
 			t.Errorf("Expected zero cell, got %d", cell)
 		}
 	}
