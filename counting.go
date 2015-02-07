@@ -27,7 +27,6 @@ type CountingBloomFilter struct {
 	hash        hash.Hash64 // hash function (kernel for all k functions)
 	m           uint        // number of buckets
 	k           uint        // number of hash functions
-	b           uint8       // number of bits allocated for each bucket
 	count       uint        // number of items in the filter
 	indexBuffer []uint      // buffer used to cache indices
 }
@@ -46,7 +45,6 @@ func NewCountingBloomFilter(n uint, b uint8, fpRate float64) *CountingBloomFilte
 		hash:        fnv.New64(),
 		m:           m,
 		k:           k,
-		b:           b,
 		indexBuffer: make([]uint, k),
 	}
 }
