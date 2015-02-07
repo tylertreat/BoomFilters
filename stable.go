@@ -27,10 +27,10 @@ import (
 // this package provides support for them as well.
 //
 // Stable Bloom Filters are useful for cases where the size of the data set
-// isn't known a priori, which is a requirement for traditional Bloom filters.
-// For example, an SBF can be used to deduplicate events from an unbounded
-// event stream with a specified upper bound on false positives and minimal
-// false negatives.
+// isn't known a priori, which is a requirement for traditional Bloom filters,
+// and memory is bounded.  For example, an SBF can be used to deduplicate
+// events from an unbounded event stream with a specified upper bound on false
+// positives and minimal false negatives.
 type StableBloomFilter struct {
 	cells       []uint8
 	hash        hash.Hash
