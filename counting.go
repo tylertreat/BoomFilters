@@ -12,7 +12,7 @@ import (
 //
 // http://pages.cs.wisc.edu/~jussara/papers/00ton.pdf
 //
-// A Counting Bloom Filter (CBF) provide a way to remove elements by using an
+// A Counting Bloom Filter (CBF) provides a way to remove elements by using an
 // array of n-bit buckets. When an element is added, the respective buckets are
 // incremented. To remove an element, the respective buckets are decremented. A
 // query checks that each of the respective buckets are non-zero. Because CBFs
@@ -20,8 +20,8 @@ import (
 // negatives in addition to the possibility of false positives.
 //
 // Counting Bloom Filters are useful for cases where elements are both added
-// and removed from the data set. Since they n-bit buckets, CBFs use roughly
-// n times more memory than traditional Bloom filters.
+// and removed from the data set. Since they use n-bit buckets, CBFs use
+// roughly n-times more memory than traditional Bloom filters.
 type CountingBloomFilter struct {
 	buckets     *Buckets    // filter data
 	hash        hash.Hash64 // hash function (kernel for all k functions)
