@@ -14,13 +14,24 @@ func TestPartitionedBloomCapacity(t *testing.T) {
 	}
 }
 
-// Ensures that K returns the number of hash functions in the Stable Bloom
-// Filter.
+// Ensures that K returns the number of hash functions in the Bloom Filter.
 func TestPartitionedBloomK(t *testing.T) {
 	f := NewPartitionedBloomFilter(100, 0.1)
 
 	if k := f.K(); k != 4 {
 		t.Errorf("Expected 4, got %d", k)
+	}
+}
+
+// Ensures that FillRatio returns the ratio of set bits.
+func TestPartitionedFillRatio(t *testing.T) {
+	f := NewPartitionedBloomFilter(100, 0.1)
+	f.Add([]byte(`a`))
+	f.Add([]byte(`b`))
+	f.Add([]byte(`c`))
+
+	if ratio := f.FillRatio(); ratio != 0.025 {
+		t.Errorf("Expected 0.025, got %f", ratio)
 	}
 }
 
@@ -85,7 +96,7 @@ func TestPartitionedBloomReset(t *testing.T) {
 	}
 
 	if f.Reset() != f {
-		t.Error("Returned BloomFilter should be the same instance")
+		t.Error("Returned PartitionedBloomFilter should be the same instance")
 	}
 
 	for _, partition := range f.partitions {

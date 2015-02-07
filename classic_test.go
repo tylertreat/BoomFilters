@@ -24,6 +24,18 @@ func TestBloomK(t *testing.T) {
 	}
 }
 
+// Ensures that FillRatio returns the ratio of set bits.
+func TestBloomFillRatio(t *testing.T) {
+	f := NewBloomFilter(100, 0.1)
+	f.Add([]byte(`a`))
+	f.Add([]byte(`b`))
+	f.Add([]byte(`c`))
+
+	if ratio := f.FillRatio(); ratio != 0.025 {
+		t.Errorf("Expected 0.025, got %f", ratio)
+	}
+}
+
 // Ensures that Test, Add, and TestAndAdd behave correctly.
 func TestBloomTestAndAdd(t *testing.T) {
 	f := NewBloomFilter(100, 0.01)

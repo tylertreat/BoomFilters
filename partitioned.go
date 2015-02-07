@@ -24,7 +24,6 @@ type PartitionedBloomFilter struct {
 	hash       hash.Hash        // hash function (kernel for all k functions)
 	m          uint             // filter size (divided into k partitions)
 	k          uint             // number of hash functions (and partitions)
-	p          float64          // partition fill ratio
 	s          uint             // partition size (m / k)
 }
 
@@ -47,7 +46,6 @@ func NewPartitionedBloomFilter(n uint, fpRate float64) *PartitionedBloomFilter {
 		hash:       fnv.New64(),
 		m:          m,
 		k:          k,
-		p:          fillRatio,
 		s:          s,
 	}
 }
@@ -60,6 +58,15 @@ func (p *PartitionedBloomFilter) Capacity() uint {
 // K returns the number of hash functions.
 func (p *PartitionedBloomFilter) K() uint {
 	return p.k
+}
+
+// FillRatio returns the average ratio of set bits across all partitions.
+func (p *PartitionedBloomFilter) FillRatio() float64 {
+	t := float64(0)
+	for i := uint(0); i < p.k; i++ {
+		t += (float64(p.partitions[i].Count()) / float64(p.s))
+	}
+	return t / float64(p.k)
 }
 
 // Test will test for membership of the data and returns true if it is a
