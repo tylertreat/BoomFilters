@@ -4,6 +4,7 @@ import (
 	"encoding/binary"
 	"hash"
 	"hash/fnv"
+	"math"
 
 	"github.com/willf/bitset"
 )
@@ -15,6 +16,7 @@ type BloomFilter struct {
 	hash  hash.Hash64    // hash function (kernel for all k functions)
 	m     uint           // filter size
 	k     uint           // number of hash functions
+	count uint           // number of items added
 }
 
 // NewBloomFilter creates a new Bloom filter optimized to store n items with a
@@ -37,6 +39,16 @@ func (b *BloomFilter) Capacity() uint {
 // K returns the number of hash functions.
 func (b *BloomFilter) K() uint {
 	return b.k
+}
+
+// Count returns the number of items added to the filter.
+func (b *BloomFilter) Count() uint {
+	return b.count
+}
+
+// EstimatedFillRatio returns the current estimated ratio of set bits.
+func (b *BloomFilter) EstimatedFillRatio() float64 {
+	return 1 - math.Exp((-float64(b.count)*float64(b.k))/float64(b.m))
 }
 
 // FillRatio returns the ratio of set bits.
@@ -71,6 +83,7 @@ func (b *BloomFilter) Add(data []byte) *BloomFilter {
 		b.array.Set((uint(lower) + uint(upper)*i) % b.m)
 	}
 
+	b.count++
 	return b
 }
 
@@ -89,6 +102,7 @@ func (b *BloomFilter) TestAndAdd(data []byte) bool {
 		b.array.Set(idx)
 	}
 
+	b.count++
 	return member
 }
 

@@ -24,6 +24,30 @@ func TestBloomK(t *testing.T) {
 	}
 }
 
+// Ensures that Count returns the number of items added to the filter.
+func TestBloomCount(t *testing.T) {
+	f := NewBloomFilter(100, 0.1)
+	for i := 0; i < 10; i++ {
+		f.Add([]byte(strconv.Itoa(i)))
+	}
+
+	if count := f.Count(); count != 10 {
+		t.Errorf("Expected 10, got %d", count)
+	}
+}
+
+// Ensures that EstimatedFillRatio returns the correct approximation.
+func TestBloomEstimatedFillRatio(t *testing.T) {
+	f := NewBloomFilter(100, 0.5)
+	for i := 0; i < 100; i++ {
+		f.Add([]byte(strconv.Itoa(i)))
+	}
+
+	if ratio := f.EstimatedFillRatio(); ratio > 0.5 {
+		t.Errorf("Expected less than or equal to 0.5, got %f", ratio)
+	}
+}
+
 // Ensures that FillRatio returns the ratio of set bits.
 func TestBloomFillRatio(t *testing.T) {
 	f := NewBloomFilter(100, 0.1)
