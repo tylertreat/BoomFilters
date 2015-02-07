@@ -124,8 +124,10 @@ func TestBloomReset(t *testing.T) {
 		t.Error("Returned BloomFilter should be the same instance")
 	}
 
-	if f.array.Any() {
-		t.Error("Expected all bits to be unset")
+	for i := uint(0); i < f.buckets.Count(); i++ {
+		if f.buckets.Get(i) != 0 {
+			t.Error("Expected all bits to be unset")
+		}
 	}
 }
 

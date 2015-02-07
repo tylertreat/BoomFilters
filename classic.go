@@ -5,18 +5,16 @@ import (
 	"hash"
 	"hash/fnv"
 	"math"
-
-	"github.com/willf/bitset"
 )
 
 // BloomFilter implements a classic Bloom filter. A Bloom filter has a non-zero
 // probability of false positives and a zero probability of false negatives.
 type BloomFilter struct {
-	array *bitset.BitSet // filter data
-	hash  hash.Hash64    // hash function (kernel for all k functions)
-	m     uint           // filter size
-	k     uint           // number of hash functions
-	count uint           // number of items added
+	buckets *Buckets    // filter data
+	hash    hash.Hash64 // hash function (kernel for all k functions)
+	m       uint        // filter size
+	k       uint        // number of hash functions
+	count   uint        // number of items added
 }
 
 // NewBloomFilter creates a new Bloom filter optimized to store n items with a
@@ -24,10 +22,10 @@ type BloomFilter struct {
 func NewBloomFilter(n uint, fpRate float64) *BloomFilter {
 	m := OptimalM(n, fpRate)
 	return &BloomFilter{
-		array: bitset.New(m),
-		hash:  fnv.New64(),
-		m:     m,
-		k:     OptimalK(fpRate),
+		buckets: NewBuckets(m, 1),
+		hash:    fnv.New64(),
+		m:       m,
+		k:       OptimalK(fpRate),
 	}
 }
 
@@ -53,7 +51,11 @@ func (b *BloomFilter) EstimatedFillRatio() float64 {
 
 // FillRatio returns the ratio of set bits.
 func (b *BloomFilter) FillRatio() float64 {
-	return float64(b.array.Count()) / float64(b.m)
+	sum := uint32(0)
+	for i := uint(0); i < b.buckets.Count(); i++ {
+		sum += b.buckets.Get(i)
+	}
+	return float64(sum) / float64(b.m)
 }
 
 // Test will test for membership of the data and returns true if it is a
@@ -65,7 +67,7 @@ func (b *BloomFilter) Test(data []byte) bool {
 
 	// If any of the K bits are not set, then it's not a member.
 	for i := uint(0); i < b.k; i++ {
-		if !b.array.Test((uint(lower) + uint(upper)*i) % b.m) {
+		if b.buckets.Get((uint(lower)+uint(upper)*i)%b.m) == 0 {
 			return false
 		}
 	}
@@ -80,7 +82,7 @@ func (b *BloomFilter) Add(data []byte) *BloomFilter {
 
 	// Set the K bits.
 	for i := uint(0); i < b.k; i++ {
-		b.array.Set((uint(lower) + uint(upper)*i) % b.m)
+		b.buckets.Set((uint(lower)+uint(upper)*i)%b.m, 1)
 	}
 
 	b.count++
@@ -96,10 +98,10 @@ func (b *BloomFilter) TestAndAdd(data []byte) bool {
 	// If any of the K bits are not set, then it's not a member.
 	for i := uint(0); i < b.k; i++ {
 		idx := (uint(lower) + uint(upper)*i) % b.m
-		if !b.array.Test(idx) {
+		if b.buckets.Get(idx) == 0 {
 			member = false
 		}
-		b.array.Set(idx)
+		b.buckets.Set(idx, 1)
 	}
 
 	b.count++
@@ -109,7 +111,7 @@ func (b *BloomFilter) TestAndAdd(data []byte) bool {
 // Reset restores the Bloom filter to its original state. It returns the filter
 // to allow for chaining.
 func (b *BloomFilter) Reset() *BloomFilter {
-	b.array.ClearAll()
+	b.buckets.Reset()
 	return b
 }
 
