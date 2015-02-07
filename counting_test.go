@@ -6,8 +6,8 @@ import (
 )
 
 // Ensures that Capacity returns the number of bits, m, in the Bloom filter.
-func TestBloomCapacity(t *testing.T) {
-	f := NewBloomFilter(100, 0.1)
+func TestCountingCapacity(t *testing.T) {
+	f := NewDefaultCountingBloomFilter(100, 0.1)
 
 	if capacity := f.Capacity(); capacity != 480 {
 		t.Errorf("Expected 480, got %d", capacity)
@@ -15,8 +15,8 @@ func TestBloomCapacity(t *testing.T) {
 }
 
 // Ensures that K returns the number of hash functions in the Bloom Filter.
-func TestBloomK(t *testing.T) {
-	f := NewBloomFilter(100, 0.1)
+func TestCountingK(t *testing.T) {
+	f := NewDefaultCountingBloomFilter(100, 0.1)
 
 	if k := f.K(); k != 4 {
 		t.Errorf("Expected 4, got %d", k)
@@ -24,44 +24,24 @@ func TestBloomK(t *testing.T) {
 }
 
 // Ensures that Count returns the number of items added to the filter.
-func TestBloomCount(t *testing.T) {
-	f := NewBloomFilter(100, 0.1)
+func TestCountingCount(t *testing.T) {
+	f := NewDefaultCountingBloomFilter(100, 0.1)
 	for i := 0; i < 10; i++ {
 		f.Add([]byte(strconv.Itoa(i)))
 	}
 
-	if count := f.Count(); count != 10 {
-		t.Errorf("Expected 10, got %d", count)
-	}
-}
-
-// Ensures that EstimatedFillRatio returns the correct approximation.
-func TestBloomEstimatedFillRatio(t *testing.T) {
-	f := NewBloomFilter(100, 0.5)
-	for i := 0; i < 100; i++ {
-		f.Add([]byte(strconv.Itoa(i)))
+	for i := 0; i < 5; i++ {
+		f.TestAndRemove([]byte(strconv.Itoa(i)))
 	}
 
-	if ratio := f.EstimatedFillRatio(); ratio > 0.5 {
-		t.Errorf("Expected less than or equal to 0.5, got %f", ratio)
-	}
-}
-
-// Ensures that FillRatio returns the ratio of set bits.
-func TestBloomFillRatio(t *testing.T) {
-	f := NewBloomFilter(100, 0.1)
-	f.Add([]byte(`a`))
-	f.Add([]byte(`b`))
-	f.Add([]byte(`c`))
-
-	if ratio := f.FillRatio(); ratio != 0.025 {
-		t.Errorf("Expected 0.025, got %f", ratio)
+	if count := f.Count(); count != 5 {
+		t.Errorf("Expected 5, got %d", count)
 	}
 }
 
 // Ensures that Test, Add, and TestAndAdd behave correctly.
-func TestBloomTestAndAdd(t *testing.T) {
-	f := NewBloomFilter(100, 0.01)
+func TestCountingTestAndAdd(t *testing.T) {
+	f := NewDefaultCountingBloomFilter(100, 0.1)
 
 	// `a` isn't in the filter.
 	if f.Test([]byte(`a`)) {
@@ -69,7 +49,7 @@ func TestBloomTestAndAdd(t *testing.T) {
 	}
 
 	if f.Add([]byte(`a`)) != f {
-		t.Error("Returned BloomFilter should be the same instance")
+		t.Error("Returned CountingBloomFilter should be the same instance")
 	}
 
 	// `a` is now in the filter.
@@ -112,15 +92,37 @@ func TestBloomTestAndAdd(t *testing.T) {
 	}
 }
 
-// Ensures that Reset sets every bit to zero.
-func TestBloomReset(t *testing.T) {
-	f := NewBloomFilter(100, 0.1)
+// Ensures that TestAndRemove behaves correctly.
+func TestCountingTestAndRemove(t *testing.T) {
+	f := NewDefaultCountingBloomFilter(100, 0.1)
+
+	// `a` isn't in the filter.
+	if f.TestAndRemove([]byte(`a`)) {
+		t.Error("`a` should not be a member")
+	}
+
+	f.Add([]byte(`a`))
+
+	// `a` is now in the filter.
+	if !f.TestAndRemove([]byte(`a`)) {
+		t.Error("`a` should be a member")
+	}
+
+	// `a` is no longer in the filter.
+	if f.TestAndRemove([]byte(`a`)) {
+		t.Error("`a` should not be a member")
+	}
+}
+
+// Ensures that Reset sets every bit to zero and the count is zero.
+func TestCountingReset(t *testing.T) {
+	f := NewDefaultCountingBloomFilter(100, 0.1)
 	for i := 0; i < 1000; i++ {
 		f.Add([]byte(strconv.Itoa(i)))
 	}
 
 	if f.Reset() != f {
-		t.Error("Returned BloomFilter should be the same instance")
+		t.Error("Returned CountingBloomFilter should be the same instance")
 	}
 
 	for i := uint(0); i < f.buckets.Count(); i++ {
@@ -128,11 +130,15 @@ func TestBloomReset(t *testing.T) {
 			t.Error("Expected all bits to be unset")
 		}
 	}
+
+	if count := f.Count(); count != 0 {
+		t.Errorf("Expected 0, got %d", count)
+	}
 }
 
-func BenchmarkBloomAdd(b *testing.B) {
+func BenchmarkCountingAdd(b *testing.B) {
 	b.StopTimer()
-	f := NewBloomFilter(100000, 0.1)
+	f := NewDefaultCountingBloomFilter(100000, 0.1)
 	data := make([][]byte, b.N)
 	for i := 0; i < b.N; i++ {
 		data[i] = []byte(strconv.Itoa(i))
@@ -144,9 +150,9 @@ func BenchmarkBloomAdd(b *testing.B) {
 	}
 }
 
-func BenchmarkBloomTest(b *testing.B) {
+func BenchmarkCountingTest(b *testing.B) {
 	b.StopTimer()
-	f := NewBloomFilter(100000, 0.1)
+	f := NewDefaultCountingBloomFilter(100000, 0.1)
 	data := make([][]byte, b.N)
 	for i := 0; i < b.N; i++ {
 		data[i] = []byte(strconv.Itoa(i))
@@ -158,9 +164,9 @@ func BenchmarkBloomTest(b *testing.B) {
 	}
 }
 
-func BenchmarkBloomTestAndAdd(b *testing.B) {
+func BenchmarkCountingTestAndAdd(b *testing.B) {
 	b.StopTimer()
-	f := NewBloomFilter(100000, 0.1)
+	f := NewDefaultCountingBloomFilter(100000, 0.1)
 	data := make([][]byte, b.N)
 	for i := 0; i < b.N; i++ {
 		data[i] = []byte(strconv.Itoa(i))
@@ -169,5 +175,19 @@ func BenchmarkBloomTestAndAdd(b *testing.B) {
 
 	for n := 0; n < b.N; n++ {
 		f.TestAndAdd(data[n])
+	}
+}
+
+func BenchmarkCountingTestAndRemove(b *testing.B) {
+	b.StopTimer()
+	f := NewDefaultCountingBloomFilter(100000, 0.1)
+	data := make([][]byte, b.N)
+	for i := 0; i < b.N; i++ {
+		data[i] = []byte(strconv.Itoa(i))
+	}
+	b.StartTimer()
+
+	for n := 0; n < b.N; n++ {
+		f.TestAndRemove(data[n])
 	}
 }
