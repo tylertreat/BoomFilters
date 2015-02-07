@@ -65,18 +65,19 @@ func NewStableBloomFilter(m, k, p uint, max uint8) *StableBloomFilter {
 	}
 }
 
-// NewDefaultStableBloomFilter creates a new Stable Bloom Filter which is
-// optimized for cases where there is no prior knowledge of the input data
-// stream. The upper bound on the rate of false positives is 0.01.
-func NewDefaultStableBloomFilter(size uint) *StableBloomFilter {
-	return NewStableBloomFilter(size, 3, 10, 1)
+// NewDefaultStableBloomFilter creates a new Stable Bloom Filter with m cells
+// and which is optimized for cases where there is no prior knowledge of the
+// input data stream. The upper bound on the rate of false positives is 0.01.
+func NewDefaultStableBloomFilter(m uint) *StableBloomFilter {
+	return NewStableBloomFilter(m, 3, 10, 1)
 }
 
 // NewUnstableBloomFilter creates a new special case of Stable Bloom Filter
-// which is a traditional Bloom filter with k hash functions. Unlike the stable
-// variant, data is not evicted and a cell contains a maximum of 1 hash value.
-func NewUnstableBloomFilter(size, k uint) *StableBloomFilter {
-	return NewStableBloomFilter(size, k, 0, 1)
+// which is a traditional Bloom filter with k hash functions and m bits. Unlike
+// the stable variant, data is not evicted and a cell contains a maximum of 1
+// hash value.
+func NewUnstableBloomFilter(m, k uint) *StableBloomFilter {
+	return NewStableBloomFilter(m, k, 0, 1)
 }
 
 // Cells returns the number of cells in the Stable Bloom Filter.
