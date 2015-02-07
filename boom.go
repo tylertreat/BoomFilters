@@ -1,8 +1,8 @@
 /*
 Package boom implements probabilistic data structures for processing
 continuous, unbounded data streams. This includes Stable Bloom Filters,
-Scalable Bloom Filters, Inverse Bloom Filters, and several variants of
-traditional Bloom filters.
+Scalable Bloom Filters, Inverse Bloom Filters, several variants of traditional
+Bloom filters, and HyperLogLog.
 
 Classic Bloom filters generally require a priori knowledge of the data set
 in order to allocate an appropriately sized bit array. This works well for
@@ -20,6 +20,10 @@ and, depending on how close together duplicates are, a small probability of
 false negatives. Scalable Bloom Filters place a tight upper bound on false
 positives while avoiding false negatives but require allocating memory
 proportional to the size of the data set.
+
+For large or unbounded data sets, calculating the exact cardinality is
+impractical. HyperLogLog uses a fraction of the memory while providing an
+accurate approximation.
 */
 package boom
 
