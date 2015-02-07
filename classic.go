@@ -39,6 +39,11 @@ func (b *BloomFilter) K() uint {
 	return b.k
 }
 
+// FillRatio returns the ratio of set bits.
+func (b *BloomFilter) FillRatio() float64 {
+	return float64(b.array.Count()) / float64(b.m)
+}
+
 // Test will test for membership of the data and returns true if it is a
 // member, false if not. This is a probabilistic test, meaning there is a
 // non-zero probability of false positives but a zero probability of false

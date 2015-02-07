@@ -60,6 +60,15 @@ func (p *PartitionedBloomFilter) K() uint {
 	return p.k
 }
 
+// FillRatio returns the average ratio of set bits across all partitions.
+func (p *PartitionedBloomFilter) FillRatio() float64 {
+	t := float64(0)
+	for i := uint(0); i < p.k; i++ {
+		t += (float64(p.partitions[i].Count()) / float64(p.s))
+	}
+	return t / float64(p.k)
+}
+
 // Test will test for membership of the data and returns true if it is a
 // member, false if not. This is a probabilistic test, meaning there is a
 // non-zero probability of false positives but a zero probability of false
