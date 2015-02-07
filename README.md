@@ -1,6 +1,6 @@
 # Boom Filters
 
-**Boom Filters** are probabilistic data structures for processing continuous, unbounded data streams. This includes **Stable Bloom Filters**, **Scalable Bloom Filters**, **Inverse Bloom Filters**, several variants of **traditional Bloom filters**, and **HyperLogLog**.
+**Boom Filters** are probabilistic data structures for processing continuous, unbounded data streams. This includes **Stable Bloom Filters**, **Scalable Bloom Filters**, **Counting Bloom Filters**, **Inverse Bloom Filters**, several variants of **traditional Bloom filters**, and **HyperLogLog**.
 
 Classic Bloom filters generally require a priori knowledge of the data set in order to allocate an appropriately sized bit array. This works well for offline processing, but online processing typically involves unbounded data streams. With enough data, a traditional Bloom filter "fills up", after which it has a false-positive probability of 1.
 
@@ -128,6 +128,45 @@ func main() {
 }
 ```
 
+## Counting Bloom Filter
+
+This is an implementation of a Counting Bloom Filter as described by Fan, Cao, Almeida, and Broder in [Summary Cache: A Scalable Wide-Area Web Cache Sharing Protocol](http://pages.cs.wisc.edu/~jussara/papers/00ton.pdf).
+
+A Counting Bloom Filter (CBF) provides a way to remove elements by using an array of n-bit buckets. When an element is added, the respective buckets are incremented. To remove an element, the respective buckets are decremented. A query checks that each of the respective buckets are non-zero. Because CBFs allow elements to be removed, they introduce a non-zero probability of false negatives in addition to the possibility of false positives.
+
+Counting Bloom Filters are useful for cases where elements are both added and removed from the data set. Since they use n-bit buckets, CBFs use roughly n-times more memory than traditional Bloom filters.
+
+### Usage
+
+```go
+package main
+
+import (
+    "fmt"
+    "github.com/tylertreat/BoomFilters"
+)
+
+func main() {
+    bf := boom.NewDefaultCountingBloomFilter(1000, 0.01)
+    
+    bf.Add([]byte(`a`))
+    if bf.Test([]byte(`a`)) {
+        fmt.Println("contains a")
+    }
+    
+    if !bf.TestAndAdd([]byte(`b`)) {
+        fmt.Println("doesn't contain b")
+    }
+    
+    if bf.TestAndRemove([]byte(`b`)) {
+        fmt.Println("removed b")
+    }
+    
+    // Restore to initial state.
+    bf.Reset()
+}
+```
+
 ## Classic Bloom Filter
 
 A classic Bloom filter is a special case of a Stable Bloom Filter whose eviction rate is zero and cell size is one. We call this special case an Unstable Bloom Filter. Because cells require more memory overhead, this package also provides two bitset-based Bloom filter variations. The first variation is the traditional implementation consisting of a single bit array. The second implementation is a partitioned approach which uniformly distributes the probability of false positives across all elements.
@@ -208,5 +247,6 @@ func main() {
 - [Scalable Bloom Filters](http://gsd.di.uminho.pt/members/cbm/ps/dbloom.pdf)
 - [The Opposite of a Bloom Filter](http://www.somethingsimilar.com/2012/05/21/the-opposite-of-a-bloom-filter/)
 - [Benchmarking Bloom Filters and Hash Functions in Go](http://zhen.org/blog/benchmarking-bloom-filters-and-hash-functions-in-go/)
+- [Summary Cache: A Scalable Wide-Area Web Cache Sharing Protocol](http://pages.cs.wisc.edu/~jussara/papers/00ton.pdf)
 - [HyperLogLog: the analysis of a near-optimal cardinality estimation algorithm](http://algo.inria.fr/flajolet/Publications/FlFuGaMe07.pdf)
 - [Package hyperloglog](https://github.com/eclesh/hyperloglog)
