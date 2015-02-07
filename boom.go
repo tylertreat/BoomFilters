@@ -27,7 +27,11 @@ accurate approximation.
 */
 package boom
 
-import "math"
+import (
+	"encoding/binary"
+	"hash"
+	"math"
+)
 
 const fillRatio = 0.5
 
@@ -42,4 +46,13 @@ func OptimalM(n uint, fpRate float64) uint {
 // filter based on the desired rate of false positives.
 func OptimalK(fpRate float64) uint {
 	return uint(math.Ceil(math.Log2(1 / fpRate)))
+}
+
+// hashKernel returns the upper and lower base hash values from which the k
+// hashes are derived.
+func hashKernel(data []byte, hash hash.Hash64) (uint32, uint32) {
+	hash.Write(data)
+	sum := hash.Sum(nil)
+	hash.Reset()
+	return binary.BigEndian.Uint32(sum[4:8]), binary.BigEndian.Uint32(sum[0:4])
 }

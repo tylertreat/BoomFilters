@@ -1,7 +1,6 @@
 package boom
 
 import (
-	"encoding/binary"
 	"hash"
 	"hash/fnv"
 )
@@ -75,7 +74,7 @@ func (c *CountingBloomFilter) Count() uint {
 // member, false if not. This is a probabilistic test, meaning there is a
 // non-zero probability of false positives and false negatives.
 func (c *CountingBloomFilter) Test(data []byte) bool {
-	lower, upper := c.hashKernel(data)
+	lower, upper := hashKernel(data, c.hash)
 
 	// If any of the K bits are not set, then it's not a member.
 	for i := uint(0); i < c.k; i++ {
@@ -90,7 +89,7 @@ func (c *CountingBloomFilter) Test(data []byte) bool {
 // Add will add the data to the Bloom filter. It returns the filter to allow
 // for chaining.
 func (c *CountingBloomFilter) Add(data []byte) *CountingBloomFilter {
-	lower, upper := c.hashKernel(data)
+	lower, upper := hashKernel(data, c.hash)
 
 	// Set the K bits.
 	for i := uint(0); i < c.k; i++ {
@@ -104,7 +103,7 @@ func (c *CountingBloomFilter) Add(data []byte) *CountingBloomFilter {
 // TestAndAdd is equivalent to calling Test followed by Add. It returns true if
 // the data is a member, false if not.
 func (c *CountingBloomFilter) TestAndAdd(data []byte) bool {
-	lower, upper := c.hashKernel(data)
+	lower, upper := hashKernel(data, c.hash)
 	member := true
 
 	// If any of the K bits are not set, then it's not a member.
@@ -123,7 +122,7 @@ func (c *CountingBloomFilter) TestAndAdd(data []byte) bool {
 // TestAndRemove will test for membership of the data and remove it from the
 // filter if it exists. Returns true if the data was a member, false if not.
 func (c *CountingBloomFilter) TestAndRemove(data []byte) bool {
-	lower, upper := c.hashKernel(data)
+	lower, upper := hashKernel(data, c.hash)
 	member := true
 
 	// Set the K bits.
@@ -150,13 +149,4 @@ func (c *CountingBloomFilter) Reset() *CountingBloomFilter {
 	c.buckets.Reset()
 	c.count = 0
 	return c
-}
-
-// hashKernel returns the upper and lower base hash values from which the k
-// hashes are derived.
-func (c *CountingBloomFilter) hashKernel(data []byte) (uint32, uint32) {
-	c.hash.Write(data)
-	sum := c.hash.Sum(nil)
-	c.hash.Reset()
-	return binary.BigEndian.Uint32(sum[4:8]), binary.BigEndian.Uint32(sum[0:4])
 }

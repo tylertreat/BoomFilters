@@ -16,7 +16,6 @@ copies or substantial portions of the Software.
 package boom
 
 import (
-	"encoding/binary"
 	"hash"
 	"hash/fnv"
 	"math"
@@ -103,7 +102,7 @@ func (p *PartitionedBloomFilter) FillRatio() float64 {
 // negatives. Due to the way the filter is partitioned, the probability of
 // false positives is uniformly distributed across all elements.
 func (p *PartitionedBloomFilter) Test(data []byte) bool {
-	lower, upper := p.hashKernel(data)
+	lower, upper := hashKernel(data, p.hash)
 
 	// If any of the K partition bits are not set, then it's not a member.
 	for i := uint(0); i < p.k; i++ {
@@ -118,7 +117,7 @@ func (p *PartitionedBloomFilter) Test(data []byte) bool {
 // Add will add the data to the Bloom filter. It returns the filter to allow
 // for chaining.
 func (p *PartitionedBloomFilter) Add(data []byte) *PartitionedBloomFilter {
-	lower, upper := p.hashKernel(data)
+	lower, upper := hashKernel(data, p.hash)
 
 	// Set the K partition bits.
 	for i := uint(0); i < p.k; i++ {
@@ -132,7 +131,7 @@ func (p *PartitionedBloomFilter) Add(data []byte) *PartitionedBloomFilter {
 // TestAndAdd is equivalent to calling Test followed by Add. It returns true if
 // the data is a member, false if not.
 func (p *PartitionedBloomFilter) TestAndAdd(data []byte) bool {
-	lower, upper := p.hashKernel(data)
+	lower, upper := hashKernel(data, p.hash)
 	member := true
 
 	// If any of the K partition bits are not set, then it's not a member.
@@ -155,13 +154,4 @@ func (p *PartitionedBloomFilter) Reset() *PartitionedBloomFilter {
 		partition.Reset()
 	}
 	return p
-}
-
-// hashKernel returns the upper and lower base hash values from which the k
-// hashes are derived.
-func (p *PartitionedBloomFilter) hashKernel(data []byte) (uint32, uint32) {
-	p.hash.Write(data)
-	sum := p.hash.Sum(nil)
-	p.hash.Reset()
-	return binary.BigEndian.Uint32(sum[4:8]), binary.BigEndian.Uint32(sum[0:4])
 }

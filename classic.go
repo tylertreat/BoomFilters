@@ -1,7 +1,6 @@
 package boom
 
 import (
-	"encoding/binary"
 	"hash"
 	"hash/fnv"
 	"math"
@@ -63,7 +62,7 @@ func (b *BloomFilter) FillRatio() float64 {
 // non-zero probability of false positives but a zero probability of false
 // negatives.
 func (b *BloomFilter) Test(data []byte) bool {
-	lower, upper := b.hashKernel(data)
+	lower, upper := hashKernel(data, b.hash)
 
 	// If any of the K bits are not set, then it's not a member.
 	for i := uint(0); i < b.k; i++ {
@@ -78,7 +77,7 @@ func (b *BloomFilter) Test(data []byte) bool {
 // Add will add the data to the Bloom filter. It returns the filter to allow
 // for chaining.
 func (b *BloomFilter) Add(data []byte) *BloomFilter {
-	lower, upper := b.hashKernel(data)
+	lower, upper := hashKernel(data, b.hash)
 
 	// Set the K bits.
 	for i := uint(0); i < b.k; i++ {
@@ -92,7 +91,7 @@ func (b *BloomFilter) Add(data []byte) *BloomFilter {
 // TestAndAdd is equivalent to calling Test followed by Add. It returns true if
 // the data is a member, false if not.
 func (b *BloomFilter) TestAndAdd(data []byte) bool {
-	lower, upper := b.hashKernel(data)
+	lower, upper := hashKernel(data, b.hash)
 	member := true
 
 	// If any of the K bits are not set, then it's not a member.
@@ -113,13 +112,4 @@ func (b *BloomFilter) TestAndAdd(data []byte) bool {
 func (b *BloomFilter) Reset() *BloomFilter {
 	b.buckets.Reset()
 	return b
-}
-
-// hashKernel returns the upper and lower base hash values from which the k
-// hashes are derived.
-func (b *BloomFilter) hashKernel(data []byte) (uint32, uint32) {
-	b.hash.Write(data)
-	sum := b.hash.Sum(nil)
-	b.hash.Reset()
-	return binary.BigEndian.Uint32(sum[4:8]), binary.BigEndian.Uint32(sum[0:4])
 }

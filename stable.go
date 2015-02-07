@@ -1,7 +1,6 @@
 package boom
 
 import (
-	"encoding/binary"
 	"hash"
 	"hash/fnv"
 	"math"
@@ -115,7 +114,7 @@ func (s *StableBloomFilter) FalsePositiveRate() float64 {
 // member, false if not. This is a probabilistic test, meaning there is a
 // non-zero probability of false positives and false negatives.
 func (s *StableBloomFilter) Test(data []byte) bool {
-	lower, upper := s.hashKernel(data)
+	lower, upper := hashKernel(data, s.hash)
 
 	// If any of the K cells are 0, then it's not a member.
 	for i := uint(0); i < s.k; i++ {
@@ -133,7 +132,7 @@ func (s *StableBloomFilter) Add(data []byte) *StableBloomFilter {
 	// Randomly decrement p cells to make room for new elements.
 	s.decrement()
 
-	lower, upper := s.hashKernel(data)
+	lower, upper := hashKernel(data, s.hash)
 
 	// Set the K cells to max.
 	for i := uint(0); i < s.k; i++ {
@@ -146,7 +145,7 @@ func (s *StableBloomFilter) Add(data []byte) *StableBloomFilter {
 // TestAndAdd is equivalent to calling Test followed by Add. It returns true if
 // the data is a member, false if not.
 func (s *StableBloomFilter) TestAndAdd(data []byte) bool {
-	lower, upper := s.hashKernel(data)
+	lower, upper := hashKernel(data, s.hash)
 	member := true
 
 	// If any of the K cells are 0, then it's not a member.
@@ -185,13 +184,4 @@ func (s *StableBloomFilter) decrement() {
 		idx := (r + int(i)) % int(s.m)
 		s.cells.Increment(uint(idx), -1)
 	}
-}
-
-// hashKernel returns the upper and lower base hash values from which the k
-// hashes are derived.
-func (s *StableBloomFilter) hashKernel(data []byte) (uint32, uint32) {
-	s.hash.Write(data)
-	sum := s.hash.Sum(nil)
-	s.hash.Reset()
-	return binary.BigEndian.Uint32(sum[4:8]), binary.BigEndian.Uint32(sum[0:4])
 }
