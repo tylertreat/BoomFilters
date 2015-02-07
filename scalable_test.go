@@ -5,6 +5,24 @@ import (
 	"testing"
 )
 
+// Ensures that NewDefaultScalableBloomFilter creates a Scalable Bloom Filter
+// with hint = 10000 and r = 0.8.
+func TestNewDefaultScalableBloomFilter(t *testing.T) {
+	f := NewDefaultScalableBloomFilter(0.1)
+
+	if f.fp != 0.1 {
+		t.Errorf("Expected 0.1, got %f", f.fp)
+	}
+
+	if f.hint != 10000 {
+		t.Errorf("Expected 10000, got %d", f.hint)
+	}
+
+	if f.r != 0.8 {
+		t.Errorf("Expected 0.8, got %f", f.r)
+	}
+}
+
 // Ensures that Capacity returns the sum of the capacities for the contained
 // Bloom filters.
 func TestScalableBloomCapacity(t *testing.T) {

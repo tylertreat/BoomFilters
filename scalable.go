@@ -32,7 +32,9 @@ type ScalableBloomFilter struct {
 }
 
 // NewScalableBloomFilter creates a new Scalable Bloom Filter with the
-// specified target false-positive rate and tightening ratio.
+// specified target false-positive rate and tightening ratio. Use
+// NewDefaultScalableBloomFilter if you don't want to calculate these
+// parameters.
 func NewScalableBloomFilter(hint uint, fpRate, r float64) *ScalableBloomFilter {
 	s := &ScalableBloomFilter{
 		filters: make([]*PartitionedBloomFilter, 0, 1),
@@ -45,6 +47,12 @@ func NewScalableBloomFilter(hint uint, fpRate, r float64) *ScalableBloomFilter {
 
 	s.addFilter()
 	return s
+}
+
+// NewDefaultScalableBloomFilter creates a new Scalable Bloom Filter with the
+// specified target false-positive rate and an optimal tightening ratio.
+func NewDefaultScalableBloomFilter(fpRate float64) *ScalableBloomFilter {
+	return NewScalableBloomFilter(10000, fpRate, 0.8)
 }
 
 // Capacity returns the current Scalable Bloom Filter capacity, which is the
