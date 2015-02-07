@@ -68,8 +68,8 @@ func NewHyperLogLog(m uint) (*HyperLogLog, error) {
 }
 
 // NewDefaultHyperLogLog creates a new HyperLogLog optimized for the specified
-// error percentage. Returns an error if the number of registers can't be
-// calculated for the provided error percentage.
+// standard error. Returns an error if the number of registers can't be
+// calculated for the provided accuracy.
 func NewDefaultHyperLogLog(e float64) (*HyperLogLog, error) {
 	m := math.Pow(1.04/e, 2)
 	return NewHyperLogLog(uint(math.Pow(2, math.Ceil(math.Log2(m)))))

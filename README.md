@@ -176,7 +176,7 @@ HyperLogLog is a probabilistic algorithm which approximates the number of distin
 
 For large or unbounded data sets, calculating the exact cardinality is impractical. HyperLogLog uses a fraction of the memory while providing an accurate approximation.
 
-This implementation was [originally written by Eric Lesh](https://github.com/eclesh/hyperloglog). Some small changes and additions have been made, including a way to construct a HyperLogLog optimized for a particular error percentage and adding FNV hashing.
+This implementation was [originally written by Eric Lesh](https://github.com/eclesh/hyperloglog). Some small changes and additions have been made, including a way to construct a HyperLogLog optimized for a particular relative accuracy and adding FNV hashing.
 
 ### Usage
 
