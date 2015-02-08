@@ -1,12 +1,14 @@
 # Boom Filters
 
-**Boom Filters** are probabilistic data structures for processing continuous, unbounded streams. This includes **Stable Bloom Filters**, **Scalable Bloom Filters**, **Counting Bloom Filters**, **Inverse Bloom Filters**, several variants of **traditional Bloom filters**, **HyperLogLog**, and **Count-Min Sketch**.
+**Boom Filters** are probabilistic data structures for processing continuous, unbounded streams. This includes **Stable Bloom Filters**, **Scalable Bloom Filters**, **Counting Bloom Filters**, **Inverse Bloom Filters**, several variants of **traditional Bloom filters**, **HyperLogLog**, **Count-Min Sketch**, and **MinHash**.
 
 Classic Bloom filters generally require a priori knowledge of the data set in order to allocate an appropriately sized bit array. This works well for offline processing, but online processing typically involves unbounded data streams. With enough data, a traditional Bloom filter "fills up", after which it has a false-positive probability of 1.
 
 Boom Filters are useful for situations where the size of the data set isn't known ahead of time. For example, a Stable Bloom Filter can be used to deduplicate events from an unbounded event stream with a specified upper bound on false positives and minimal false negatives. Alternatively, an Inverse Bloom Filter is ideal for deduplicating a stream where duplicate events are relatively close together. This results in no false positives and, depending on how close together duplicates are, a small probability of false negatives. Scalable Bloom Filters place a tight upper bound on false positives while avoiding false negatives but require allocating memory proportional to the size of the data set.
 
 For large or unbounded data sets, calculating the exact cardinality is impractical. HyperLogLog uses a fraction of the memory while providing an accurate approximation. Similarly, Count-Min Sketch provides an efficient way to estimate event frequency for data streams.
+
+MinHash is a probabilistic algorithm to approximate the similarity between two sets. This can be used to cluster or compare documents by splitting the corpus into a bag of words.
 
 For documentation, see [godoc](http://godoc.org/github.com/tylertreat/BoomFilters).
 
@@ -272,6 +274,30 @@ func main() {
 }
 ```
 
+## MinHash
+
+This is a variation of the technique for estimating similarity between two sets as presented by Broder in [On the resemblance and containment of documents](http://gatekeeper.dec.com/ftp/pub/dec/SRC/publications/broder/positano-final-wpnums.pdf).
+
+MinHash is a probabilistic algorithm which can be used to cluster or compare documents by splitting the corpus into a bag of words. MinHash returns the approximated similarity ratio of the two bags. The similarity is less accurate for very small bags of words.
+
+### Usage
+
+```go
+package main
+
+import (
+    "fmt"
+    "github.com/tylertreat/BoomFilters"
+)
+
+func main() {
+    bag1 := []string{"bill", "alice", "frank", "bob", "sara", "tyler", "james"}
+	bag2 := []string{"bill", "alice", "frank", "bob", "sara"}
+	
+	fmt.Println("similarity", boom.MinHash(bag1, bag2))
+}
+```
+
 ## References
 
 - [Approximately Detecting Duplicates for Streaming Data using Stable Bloom Filters](http://webdocs.cs.ualberta.ca/~drafiei/papers/DupDet06Sigmod.pdf)
@@ -282,3 +308,4 @@ func main() {
 - [An Improved Data Stream Summary: The Count-Min Sketch and its Applications](http://dimacs.rutgers.edu/~graham/pubs/papers/cm-full.pdf)
 - [HyperLogLog: the analysis of a near-optimal cardinality estimation algorithm](http://algo.inria.fr/flajolet/Publications/FlFuGaMe07.pdf)
 - [Package hyperloglog](https://github.com/eclesh/hyperloglog)
+- [On the resemblance and containment of documents](http://gatekeeper.dec.com/ftp/pub/dec/SRC/publications/broder/positano-final-wpnums.pdf)
