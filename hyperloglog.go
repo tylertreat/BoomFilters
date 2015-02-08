@@ -42,7 +42,8 @@ var exp32 = math.Pow(2, 32)
 //
 // For large or unbounded data sets, calculating the exact cardinality is
 // impractical. HyperLogLog uses a fraction of the memory while providing an
-// accurate approximation.
+// accurate approximation. For counting element frequency, refer to the
+// Count-Min Sketch.
 type HyperLogLog struct {
 	registers []uint8     // counter registers
 	m         uint        // number of registers
@@ -119,7 +120,7 @@ func (h *HyperLogLog) Count() uint64 {
 }
 
 // Merge combines this HyperLogLog with another. Returns an error if the number
-// of registers in the two HyperLogLogs isn't the same.
+// of registers in the two HyperLogLogs are not equal.
 func (h *HyperLogLog) Merge(other *HyperLogLog) error {
 	if h.m != other.m {
 		return errors.New("number of registers must match")
