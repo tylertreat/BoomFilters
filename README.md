@@ -1,12 +1,12 @@
 # Boom Filters
 
-**Boom Filters** are probabilistic data structures for processing continuous, unbounded data streams. This includes **Stable Bloom Filters**, **Scalable Bloom Filters**, **Counting Bloom Filters**, **Inverse Bloom Filters**, several variants of **traditional Bloom filters**, and **HyperLogLog**.
+**Boom Filters** are probabilistic data structures for processing continuous, unbounded data streams. This includes **Stable Bloom Filters**, **Scalable Bloom Filters**, **Counting Bloom Filters**, **Inverse Bloom Filters**, several variants of **traditional Bloom filters**, **HyperLogLog**, and **Count-Min Sketch**.
 
 Classic Bloom filters generally require a priori knowledge of the data set in order to allocate an appropriately sized bit array. This works well for offline processing, but online processing typically involves unbounded data streams. With enough data, a traditional Bloom filter "fills up", after which it has a false-positive probability of 1.
 
 Boom Filters are useful for situations where the size of the data set isn't known ahead of time. For example, a Stable Bloom Filter can be used to deduplicate events from an unbounded event stream with a specified upper bound on false positives and minimal false negatives. Alternatively, an Inverse Bloom Filter is ideal for deduplicating a stream where duplicate events are relatively close together. This results in no false positives and, depending on how close together duplicates are, a small probability of false negatives. Scalable Bloom Filters place a tight upper bound on false positives while avoiding false negatives but require allocating memory proportional to the size of the data set.
 
-For large or unbounded data sets, calculating the exact cardinality is impractical. HyperLogLog uses a fraction of the memory while providing an accurate approximation.
+For large or unbounded data sets, calculating the exact cardinality is impractical. HyperLogLog uses a fraction of the memory while providing an accurate approximation. Similarly, Count-Min Sketch provides an efficient way to estimate event frequency for data streams.
 
 For documentation, see [godoc](http://godoc.org/github.com/tylertreat/BoomFilters).
 
@@ -207,15 +207,46 @@ func main() {
 }
 ```
 
+## Count-Min Sketch
+
+This is an implementation of a Count-Min Sketch as described by Cormode and Muthukrishnan in [An Improved Data Stream Summary: The Count-Min Sketch and its Applications](http://dimacs.rutgers.edu/~graham/pubs/papers/cm-full.pdf).
+
+A Count-Min Sketch (CMS) is a probabilistic data structure which approximates the frequency of events in a data stream. Unlike a hash map, a CMS uses sub-linear space at the expense of a configurable error factor. Similar to Counting Bloom filters, items are hashed to a series of buckets, which increment a counter. The frequency of an item is estimated by taking the minimum of each of the item's respective counter values.
+
+Count-Min Sketches are useful for counting the frequency of events in massive data sets or unbounded streams online. In these situations, storing the entire data set or allocating counters for every event in memory is impractical. It may be possible for offline processing, but real-time processing requires fast, space-efficient solutions like the CMS. For approximating set cardinality, refer to the HyperLogLog.
+
+### Usage
+
+```go
+package main
+
+import (
+    "fmt"
+    "github.com/tylertreat/BoomFilters"
+)
+
+func main() {
+    cms := boom.NewCountMinSketch(0.001, 0.99)
+    
+    cms.Add([]byte(`alice`)).Add([]byte(`bob`)).Add([]byte(`bob`)).Add([]byte(`frank`))
+    fmt.Println("frequency of alice", cms.Count([]byte(`alice`)))
+    fmt.Println("frequency of bob", cms.Count([]byte(`bob`)))
+    fmt.Println("frequency of frank", cms.Count([]byte(`frank`)))
+    
+    // Restore to initial state.
+    cms.Reset()
+}
+```
+
 ## HyperLogLog
 
-This is an implementation of a HyperLogLog as described by Flajolet, Fusy, Gandouet, and Meunier in [HyperLogLog: the analysis of a near-optimal cardinality estimation algorithm](http://algo.inria.fr/flajolet/Publications/FlFuGaMe07.pdf).
+This is an implementation of HyperLogLog as described by Flajolet, Fusy, Gandouet, and Meunier in [HyperLogLog: the analysis of a near-optimal cardinality estimation algorithm](http://algo.inria.fr/flajolet/Publications/FlFuGaMe07.pdf).
 
 HyperLogLog is a probabilistic algorithm which approximates the number of distinct elements in a multiset. It works by hashing values and calculating the maximum number of leading zeros in the binary representation of each hash. If the maximum number of leading zeros is n, the estimated number of distinct elements in the set is 2^n. To minimize variance, the multiset is split into a configurable number of registers, the maximum number of leading zeros is calculated in the numbers in each register, and a harmonic mean is used to combine the estimates.
 
 For large or unbounded data sets, calculating the exact cardinality is impractical. HyperLogLog uses a fraction of the memory while providing an accurate approximation.
 
-This implementation was [originally written by Eric Lesh](https://github.com/eclesh/hyperloglog). Some small changes and additions have been made, including a way to construct a HyperLogLog optimized for a particular relative accuracy and adding FNV hashing.
+This implementation was [originally written by Eric Lesh](https://github.com/eclesh/hyperloglog). Some small changes and additions have been made, including a way to construct a HyperLogLog optimized for a particular relative accuracy and adding FNV hashing. For counting element frequency, refer to the Count-Min Sketch.
 
 ### Usage
 
@@ -248,5 +279,6 @@ func main() {
 - [The Opposite of a Bloom Filter](http://www.somethingsimilar.com/2012/05/21/the-opposite-of-a-bloom-filter/)
 - [Benchmarking Bloom Filters and Hash Functions in Go](http://zhen.org/blog/benchmarking-bloom-filters-and-hash-functions-in-go/)
 - [Summary Cache: A Scalable Wide-Area Web Cache Sharing Protocol](http://pages.cs.wisc.edu/~jussara/papers/00ton.pdf)
+- [An Improved Data Stream Summary: The Count-Min Sketch and its Applications](http://dimacs.rutgers.edu/~graham/pubs/papers/cm-full.pdf)
 - [HyperLogLog: the analysis of a near-optimal cardinality estimation algorithm](http://algo.inria.fr/flajolet/Publications/FlFuGaMe07.pdf)
 - [Package hyperloglog](https://github.com/eclesh/hyperloglog)
