@@ -1,6 +1,6 @@
 # Boom Filters
 
-**Boom Filters** are probabilistic data structures for processing continuous, unbounded data streams. This includes **Stable Bloom Filters**, **Scalable Bloom Filters**, **Counting Bloom Filters**, **Inverse Bloom Filters**, several variants of **traditional Bloom filters**, **HyperLogLog**, and **Count-Min Sketch**.
+**Boom Filters** are probabilistic data structures for processing continuous, unbounded streams. This includes **Stable Bloom Filters**, **Scalable Bloom Filters**, **Counting Bloom Filters**, **Inverse Bloom Filters**, several variants of **traditional Bloom filters**, **HyperLogLog**, and **Count-Min Sketch**.
 
 Classic Bloom filters generally require a priori knowledge of the data set in order to allocate an appropriately sized bit array. This works well for offline processing, but online processing typically involves unbounded data streams. With enough data, a traditional Bloom filter "fills up", after which it has a false-positive probability of 1.
 
