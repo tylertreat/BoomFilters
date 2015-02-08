@@ -68,7 +68,7 @@ func TestK(t *testing.T) {
 
 // Ensures that Test, Add, and TestAndAdd behave correctly.
 func TestTestAndAdd(t *testing.T) {
-	f := NewDefaultStableBloomFilter(1000)
+	f := NewDefaultStableBloomFilter(10000)
 
 	// `a` isn't in the filter.
 	if f.Test([]byte(`a`)) {
