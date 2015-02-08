@@ -2,7 +2,8 @@
 Package boom implements probabilistic data structures for processing
 continuous, unbounded data streams. This includes Stable Bloom Filters,
 Scalable Bloom Filters, Counting Bloom Filters, Inverse Bloom Filters, several
-variants of traditional Bloom filters, HyperLogLog, and Count-Min Sketch.
+variants of traditional Bloom filters, HyperLogLog, Count-Min Sketch, and
+MinHash.
 
 Classic Bloom filters generally require a priori knowledge of the data set
 in order to allocate an appropriately sized bit array. This works well for
@@ -25,6 +26,10 @@ For large or unbounded data sets, calculating the exact cardinality is
 impractical. HyperLogLog uses a fraction of the memory while providing an
 accurate approximation. Similarly, Count-Min Sketch provides an efficient way
 to estimate event frequency for data streams.
+
+MinHash is a probabilistic algorithm to approximate the similarity between two
+sets. This can be used to cluster or compare documents by splitting the corpus
+into a bag of words.
 */
 package boom
 
