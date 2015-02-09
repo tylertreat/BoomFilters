@@ -40,17 +40,15 @@ type StableBloomFilter struct {
 	indexBuffer []uint      // buffer used to cache indices
 }
 
-// NewStableBloomFilter creates a new Stable Bloom Filter with m cells and k
-// hash functions. D is the number of bits allocated per cell. P indicates the
-// number of cells to decrement in each iteration. Use NewDefaultStableFilter
-// if you don't want to calculate these parameters.
-func NewStableBloomFilter(m, k, p uint, d uint8) *StableBloomFilter {
-	if p > m {
-		p = m
-	}
-
+// NewStableBloomFilter creates a new Stable Bloom Filter with m cells and d
+// bits allocated per cell optimized for the target false-positive rate. Use
+// NewDefaultStableFilter if you don't want to calculate d.
+func NewStableBloomFilter(m uint, d uint8, fpRate float64) *StableBloomFilter {
+	k := OptimalK(fpRate) / 2
 	if k > m {
 		k = m
+	} else if k <= 0 {
+		k = 1
 	}
 
 	cells := NewBuckets(m, d)
@@ -59,26 +57,40 @@ func NewStableBloomFilter(m, k, p uint, d uint8) *StableBloomFilter {
 		hash:        fnv.New64(),
 		m:           m,
 		k:           k,
-		p:           p,
+		p:           optimalStableP(m, k, d, fpRate),
 		max:         cells.MaxBucketValue(),
 		cells:       cells,
 		indexBuffer: make([]uint, k),
 	}
 }
 
-// NewDefaultStableBloomFilter creates a new Stable Bloom Filter with m cells
-// and which is optimized for cases where there is no prior knowledge of the
-// input data stream. The upper bound on the rate of false positives is 0.01.
-func NewDefaultStableBloomFilter(m uint) *StableBloomFilter {
-	return NewStableBloomFilter(m, 3, 10, 1)
+// NewDefaultStableBloomFilter creates a new Stable Bloom Filter with m 1-bit
+// cells and which is optimized for cases where there is no prior knowledge of
+// the input data stream while maintaining an upper bound using the provided
+// rate of false positives.
+func NewDefaultStableBloomFilter(m uint, fpRate float64) *StableBloomFilter {
+	return NewStableBloomFilter(m, 1, fpRate)
 }
 
 // NewUnstableBloomFilter creates a new special case of Stable Bloom Filter
-// which is a traditional Bloom filter with k hash functions and m bits. Unlike
-// the stable variant, data is not evicted and a cell contains a maximum of 1
-// hash value.
-func NewUnstableBloomFilter(m, k uint) *StableBloomFilter {
-	return NewStableBloomFilter(m, k, 0, 1)
+// which is a traditional Bloom filter with m bits and an optimal number of
+// hash functions for the target false-positive rate. Unlike the stable
+// variant, data is not evicted and a cell contains a maximum of 1 hash value.
+func NewUnstableBloomFilter(m uint, fpRate float64) *StableBloomFilter {
+	var (
+		cells = NewBuckets(m, 1)
+		k     = OptimalK(fpRate)
+	)
+
+	return &StableBloomFilter{
+		hash:        fnv.New64(),
+		m:           m,
+		k:           k,
+		p:           0,
+		max:         cells.MaxBucketValue(),
+		cells:       cells,
+		indexBuffer: make([]uint, k),
+	}
 }
 
 // Cells returns the number of cells in the Stable Bloom Filter.
@@ -184,4 +196,21 @@ func (s *StableBloomFilter) decrement() {
 		idx := (r + int(i)) % int(s.m)
 		s.cells.Increment(uint(idx), -1)
 	}
+}
+
+// optimalStableP returns the optimal number of cells to decrement, p, per
+// iteration for the provided parameters of an SBF.
+func optimalStableP(m, k uint, d uint8, fpRate float64) uint {
+	var (
+		max      = math.Pow(2, float64(d)) - 1
+		subDenom = math.Pow(1-math.Pow(fpRate, 1/float64(k)), 1/max)
+		denom    = (1/subDenom - 1) * (1/float64(k) - 1/float64(m))
+	)
+
+	p := uint(1 / denom)
+	if p <= 0 {
+		p = 1
+	}
+
+	return p
 }

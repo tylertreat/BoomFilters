@@ -37,7 +37,7 @@ import (
 )
 
 func main() {
-    sbf := boom.NewDefaultStableBloomFilter(10000)
+    sbf := boom.NewDefaultStableBloomFilter(10000, 0.01)
     fmt.Println("stable point", sbf.StablePoint())
     
     sbf.Add([]byte(`a`))
