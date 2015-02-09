@@ -73,3 +73,29 @@ func TestBucketsReset(t *testing.T) {
 		}
 	}
 }
+
+func BenchmarkBucketsIncrement(b *testing.B) {
+	buckets := NewBuckets(10000, 10)
+	for n := 0; n < b.N; n++ {
+		buckets.Increment(uint(n)%10000, 1)
+	}
+}
+
+func BenchmarkBucketsSet(b *testing.B) {
+	buckets := NewBuckets(10000, 10)
+	for n := 0; n < b.N; n++ {
+		buckets.Set(uint(n)%10000, 1)
+	}
+}
+
+func BenchmarkBucketsGet(b *testing.B) {
+	b.StopTimer()
+	buckets := NewBuckets(10000, 10)
+	for n := 0; n < b.N; n++ {
+		buckets.Set(uint(n)%10000, 1)
+	}
+	b.StartTimer()
+	for n := 0; n < b.N; n++ {
+		buckets.Get(uint(n) % 10000)
+	}
+}
