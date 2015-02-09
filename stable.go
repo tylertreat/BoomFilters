@@ -103,6 +103,11 @@ func (s *StableBloomFilter) K() uint {
 	return s.k
 }
 
+// P returns the number of cells decremented on every add.
+func (s *StableBloomFilter) P() uint {
+	return s.p
+}
+
 // StablePoint returns the limit of the expected fraction of zeros in the
 // Stable Bloom Filter when the number of iterations goes to infinity. When
 // this limit is reached, the Stable Bloom Filter is considered stable.

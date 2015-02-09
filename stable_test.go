@@ -20,7 +20,7 @@ func TestNewUnstableBloomFilter(t *testing.T) {
 		t.Errorf("Expected 100, got %d", f.m)
 	}
 
-	if f.p != 0 {
+	if f.P() != 0 {
 		t.Errorf("Expected 0, got %d", f.p)
 	}
 
