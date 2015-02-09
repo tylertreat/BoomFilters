@@ -70,7 +70,7 @@ func (c *CountMinSketch) Delta() float64 {
 	return c.delta
 }
 
-// Count returns the number of items added to the sketch.
+// TotalCount returns the number of items added to the sketch.
 func (c *CountMinSketch) TotalCount() uint64 {
 	return c.count
 }

@@ -38,23 +38,23 @@ import (
 
 func TestTheBasics(t *testing.T) {
 	f, _ := NewInverseBloomFilter(2)
-	twentyNineId := []byte{27, 28, 29}
-	thirtyId := []byte{27, 28, 30}
-	thirtyFiveId := []byte{27, 28, 35}
-	shouldNotContain(t, "nothing should be contained at all", f, twentyNineId)
-	shouldContain(t, "now it should", f, twentyNineId)
-	shouldNotContain(t, "false unless the hash collides", f, thirtyId)
-	shouldContain(t, "original should still return true", f, twentyNineId)
-	shouldContain(t, "new array should still return true", f, thirtyId)
+	twentyNineID := []byte{27, 28, 29}
+	thirtyID := []byte{27, 28, 30}
+	thirtyFiveID := []byte{27, 28, 35}
+	shouldNotContain(t, "nothing should be contained at all", f, twentyNineID)
+	shouldContain(t, "now it should", f, twentyNineID)
+	shouldNotContain(t, "false unless the hash collides", f, thirtyID)
+	shouldContain(t, "original should still return true", f, twentyNineID)
+	shouldContain(t, "new array should still return true", f, thirtyID)
 
 	// Handling collisions. {27, 28, 35} and {27, 28, 30} hash to the same
 	// index using the current hash function inside InverseBloomFilter.
-	shouldNotContain(t, "colliding array returns false", f, thirtyFiveId)
+	shouldNotContain(t, "colliding array returns false", f, thirtyFiveID)
 	shouldContain(t,
-		"colliding array returns true in second call", f, thirtyFiveId)
-	shouldNotContain(t, "original colliding array returns false", f, thirtyId)
-	shouldContain(t, "original colliding array returns true", f, thirtyId)
-	shouldNotContain(t, "colliding array returns false", f, thirtyFiveId)
+		"colliding array returns true in second call", f, thirtyFiveID)
+	shouldNotContain(t, "original colliding array returns false", f, thirtyID)
+	shouldContain(t, "original colliding array returns true", f, thirtyID)
+	shouldNotContain(t, "colliding array returns false", f, thirtyFiveID)
 }
 
 func TestSizeRounding(t *testing.T) {

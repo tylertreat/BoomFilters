@@ -92,8 +92,8 @@ func (i *InverseBloomFilter) Observe(key []byte) bool {
 	i.hash.Write(key)
 	uindex := i.hash.Sum32() & i.sizeMask
 	i.hash.Reset()
-	oldId := getAndSet(i.array, int32(uindex), key)
-	return bytes.Equal(oldId, key)
+	oldID := getAndSet(i.array, int32(uindex), key)
+	return bytes.Equal(oldID, key)
 }
 
 // Size returns the filter length.
