@@ -93,7 +93,7 @@ func TestTooSmallSize(t *testing.T) {
 	}
 }
 
-func BenchmarkObserve(b *testing.B) {
+func BenchmarkInverseObserve(b *testing.B) {
 	f, _ := NewInverseBloomFilter(100000)
 	for n := 0; n < b.N; n++ {
 		f.Observe([]byte(strconv.Itoa(n)))
