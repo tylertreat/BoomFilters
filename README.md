@@ -101,11 +101,11 @@ func main() {
 
 ## Inverse Bloom Filter
 
-An Inverse Bloom Filter, or "the opposite of a Bloom filter", is a concurrent, probabilistic data structure used to test whether an item has been observed or not. This implementation, [originally described and written by Jeff Hodges](http://www.somethingsimilar.com/2012/05/21/the-opposite-of-a-bloom-filter/), replaces the use of MD5 hashing with a non-cryptographic FNV-1a function.
+An Inverse Bloom Filter, or "the opposite of a Bloom filter", is a concurrent, probabilistic data structure used to test whether an item has been observed or not. This implementation, [originally described and written by Jeff Hodges](http://www.somethingsimilar.com/2012/05/21/the-opposite-of-a-bloom-filter/), replaces the use of MD5 hashing with a non-cryptographic FNV-1 function.
 
 The Inverse Bloom Filter may report a false negative but can never report a false positive. That is, it may report that an item has not been seen when it actually has, but it will never report an item as seen which it hasn't come across. This behaves in a similar manner to a fixed-size hashmap which does not handle conflicts.
 
-This structure is particularly well-suited to streams in which duplicates are relatively close together.
+This structure is particularly well-suited to streams in which duplicates are relatively close together. It uses a CAS-style approach, which makes it thread-safe.
 
 ### Usage
 
@@ -120,12 +120,17 @@ import (
 func main() {
     ibf := boom.NewInverseBloomFilter(10000)
     
-    if !ibf.Observe([]byte(`a`)) {
-        fmt.Println("haven't observed a")
+    ibf.Add([]byte(`a`))
+    if ibf.Test([]byte(`a`)) {
+        fmt.Println("contains a")
     }
     
-    if ibf.Observe([]byte(`a`)) {
-        fmt.Println("observed a")
+    if !ibf.TestAndAdd([]byte(`b`)) {
+        fmt.Println("doesn't contain b")
+    }
+    
+    if ibf.Test([]byte(`b`)) {
+        fmt.Println("now it contains b!")
     }
 }
 ```

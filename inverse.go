@@ -33,16 +33,11 @@ package boom
 
 import (
 	"bytes"
-	"errors"
 	"hash"
 	"hash/fnv"
-	"math"
 	"sync/atomic"
 	"unsafe"
 )
-
-// maxSize indicates the largest possible filter size.
-const maxSize = 1 << 30
 
 // InverseBloomFilter is a concurrent "inverse" Bloom filter, which is
 // effectively the opposite of a classic Bloom filter. This was originally
@@ -60,66 +55,60 @@ const maxSize = 1 << 30
 // data. Ideally, duplicate events are relatively close together.
 type InverseBloomFilter struct {
 	array    []*[]byte
-	sizeMask uint32
-	hash     *uintHash
+	hash     hash.Hash32
+	capacity uint
 }
 
 // NewInverseBloomFilter creates and returns a new InverseBloomFilter with the
-// specified capacity. It returns an error if the size is not between 0 and
-// 2^30.
-func NewInverseBloomFilter(size int) (*InverseBloomFilter, error) {
-	if size > maxSize {
-		return nil, errors.New("Size too large to round to a power of 2")
+// specified capacity.
+func NewInverseBloomFilter(capacity uint) *InverseBloomFilter {
+	return &InverseBloomFilter{
+		array:    make([]*[]byte, capacity),
+		hash:     fnv.New32(),
+		capacity: capacity,
 	}
+}
 
-	if size <= 0 {
-		return nil, errors.New("Size must be greater than 0")
+// Test will test for membership of the data and returns true if it is a
+// member, false if not. This is a probabilistic test, meaning there is a
+// non-zero probability of false negatives but a zero probability of false
+// positives. That is, it may return false even though the data was added, but
+// it will never return true for data that hasn't been added.
+func (i *InverseBloomFilter) Test(data []byte) bool {
+	index := i.index(data)
+	indexPtr := (*unsafe.Pointer)(unsafe.Pointer(&i.array[index]))
+	val := (*[]byte)(atomic.LoadPointer(indexPtr))
+	if val == nil {
+		return false
 	}
-
-	// Round to the next largest power of two.
-	size = int(math.Pow(2, math.Ceil(math.Log2(float64(size)))))
-	slice := make([]*[]byte, size)
-	sizeMask := uint32(size - 1)
-	return &InverseBloomFilter{slice, sizeMask, &uintHash{fnv.New32a()}}, nil
+	return bytes.Equal(*val, data)
 }
 
-// Observe marks a key as observed. It returns true if the key has been
-// previously observed and false if the key has possibly not been observed
-// yet. It may report a false negative but will never report a false positive.
-// That is, it may return false even though the key was previously observed,
-// but it will never return true for a key that has never been observed.
-func (i *InverseBloomFilter) Observe(key []byte) bool {
-	i.hash.Write(key)
-	uindex := i.hash.Sum32() & i.sizeMask
-	i.hash.Reset()
-	oldID := getAndSet(i.array, int32(uindex), key)
-	return bytes.Equal(oldID, key)
+// Add will add the data to the filter. It returns the filter to allow for
+// chaining.
+func (i *InverseBloomFilter) Add(data []byte) *InverseBloomFilter {
+	index := i.index(data)
+	i.getAndSet(index, data)
+	return i
 }
 
-// Size returns the filter length.
-func (i *InverseBloomFilter) Size() int {
-	return len(i.array)
+// TestAndAdd is equivalent to calling Test followed by Add atomically. It
+// returns true if the data is a member, false if not.
+func (i *InverseBloomFilter) TestAndAdd(data []byte) bool {
+	oldID := i.getAndSet(i.index(data), data)
+	return bytes.Equal(oldID, data)
 }
 
-type uintHash struct {
-	hash.Hash
+// Capacity returns the filter capacity.
+func (i *InverseBloomFilter) Capacity() uint {
+	return i.capacity
 }
 
-func (u uintHash) Sum32() uint32 {
-	sum := u.Sum(nil)
-	x := uint32(sum[0])
-	for _, val := range sum[1:3] {
-		x = x << 3
-		x += uint32(val)
-	}
-	return x
-}
-
-// getAndSet returns the key that was in the slice at the given index after
-// putting the new key in the slice at that index, atomically.
-func getAndSet(arr []*[]byte, index int32, key []byte) []byte {
-	indexPtr := (*unsafe.Pointer)(unsafe.Pointer(&arr[index]))
-	keyUnsafe := unsafe.Pointer(&key)
+// getAndSet returns the data that was in the slice at the given index after
+// putting the new data in the slice at that index, atomically.
+func (i *InverseBloomFilter) getAndSet(index uint32, data []byte) []byte {
+	indexPtr := (*unsafe.Pointer)(unsafe.Pointer(&i.array[index]))
+	keyUnsafe := unsafe.Pointer(&data)
 	var oldKey []byte
 	for {
 		oldKeyUnsafe := atomic.LoadPointer(indexPtr)
@@ -132,4 +121,12 @@ func getAndSet(arr []*[]byte, index int32, key []byte) []byte {
 		}
 	}
 	return oldKey
+}
+
+// index returns the array index for the given data.
+func (i *InverseBloomFilter) index(data []byte) uint32 {
+	i.hash.Write(data)
+	index := i.hash.Sum32() % uint32(i.capacity)
+	i.hash.Reset()
+	return index
 }
