@@ -106,7 +106,7 @@ func (s *ScalableBloomFilter) Test(data []byte) bool {
 
 // Add will add the data to the Bloom filter. It returns the filter to allow
 // for chaining.
-func (s *ScalableBloomFilter) Add(data []byte) *ScalableBloomFilter {
+func (s *ScalableBloomFilter) Add(data []byte) Filter {
 	idx := len(s.filters) - 1
 
 	// If the last filter has reached its fill ratio, add a new one.

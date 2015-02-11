@@ -86,7 +86,7 @@ func (i *InverseBloomFilter) Test(data []byte) bool {
 
 // Add will add the data to the filter. It returns the filter to allow for
 // chaining.
-func (i *InverseBloomFilter) Add(data []byte) *InverseBloomFilter {
+func (i *InverseBloomFilter) Add(data []byte) Filter {
 	index := i.index(data)
 	i.getAndSet(index, data)
 	return i

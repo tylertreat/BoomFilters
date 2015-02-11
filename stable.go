@@ -145,7 +145,7 @@ func (s *StableBloomFilter) Test(data []byte) bool {
 
 // Add will add the data to the Stable Bloom Filter. It returns the filter to
 // allow for chaining.
-func (s *StableBloomFilter) Add(data []byte) *StableBloomFilter {
+func (s *StableBloomFilter) Add(data []byte) Filter {
 	// Randomly decrement p cells to make room for new elements.
 	s.decrement()
 

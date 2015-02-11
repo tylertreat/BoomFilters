@@ -116,7 +116,7 @@ func (p *PartitionedBloomFilter) Test(data []byte) bool {
 
 // Add will add the data to the Bloom filter. It returns the filter to allow
 // for chaining.
-func (p *PartitionedBloomFilter) Add(data []byte) *PartitionedBloomFilter {
+func (p *PartitionedBloomFilter) Add(data []byte) Filter {
 	lower, upper := hashKernel(data, p.hash)
 
 	// Set the K partition bits.

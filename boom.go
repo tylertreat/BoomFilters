@@ -41,6 +41,22 @@ import (
 
 const fillRatio = 0.5
 
+// Filter is a probabilistic data structure which is used to test the
+// membership of an element in a set.
+type Filter interface {
+	// Test will test for membership of the data and returns true if it is a
+	// member, false if not.
+	Test([]byte) bool
+
+	// Add will add the data to the Bloom filter. It returns the filter to
+	// allow for chaining.
+	Add([]byte) Filter
+
+	// TestAndAdd is equivalent to calling Test followed by Add. It returns
+	// true if the data is a member, false if not.
+	TestAndAdd([]byte) bool
+}
+
 // OptimalM calculates the optimal Bloom filter size, m, based on the number of
 // items and the desired rate of false positives.
 func OptimalM(n uint, fpRate float64) uint {

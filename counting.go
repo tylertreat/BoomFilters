@@ -88,7 +88,7 @@ func (c *CountingBloomFilter) Test(data []byte) bool {
 
 // Add will add the data to the Bloom filter. It returns the filter to allow
 // for chaining.
-func (c *CountingBloomFilter) Add(data []byte) *CountingBloomFilter {
+func (c *CountingBloomFilter) Add(data []byte) Filter {
 	lower, upper := hashKernel(data, c.hash)
 
 	// Set the K bits.

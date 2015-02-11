@@ -76,7 +76,7 @@ func (b *BloomFilter) Test(data []byte) bool {
 
 // Add will add the data to the Bloom filter. It returns the filter to allow
 // for chaining.
-func (b *BloomFilter) Add(data []byte) *BloomFilter {
+func (b *BloomFilter) Add(data []byte) Filter {
 	lower, upper := hashKernel(data, b.hash)
 
 	// Set the K bits.
