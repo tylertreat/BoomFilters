@@ -29,4 +29,16 @@ func TestTopK(t *testing.T) {
 			t.Errorf("Expected %s, got %s", expected[i], e)
 		}
 	}
+
+	if topk.Reset() != topk {
+		t.Error("Returned TopK should be the same instance")
+	}
+
+	if l := topk.elements.Len(); l != 0 {
+		t.Errorf("Expected 0, got %d", l)
+	}
+
+	if n := topk.n; n != 0 {
+		t.Errorf("Expected 0, got %d", n)
+	}
 }

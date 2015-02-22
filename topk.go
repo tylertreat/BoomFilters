@@ -78,6 +78,17 @@ func (t *TopK) Elements() [][]byte {
 	return topK
 }
 
+// Reset restores the TopK to its original state. It returns itself to allow
+// for chaining.
+func (t *TopK) Reset() *TopK {
+	t.cms.Reset()
+	elements := make(elementHeap, 0, t.k)
+	heap.Init(&elements)
+	t.elements = &elements
+	t.n = 0
+	return t
+}
+
 // isTop indicates if the given frequency falls within the top-k heap.
 func (t *TopK) isTop(freq uint64) bool {
 	if t.elements.Len() < int(t.k) {
