@@ -25,7 +25,8 @@ proportional to the size of the data set.
 For large or unbounded data sets, calculating the exact cardinality is
 impractical. HyperLogLog uses a fraction of the memory while providing an
 accurate approximation. Similarly, Count-Min Sketch provides an efficient way
-to estimate event frequency for data streams.
+to estimate event frequency for data streams. TopK tracks the top-k most
+frequent elements.
 
 MinHash is a probabilistic algorithm to approximate the similarity between two
 sets. This can be used to cluster or compare documents by splitting the corpus
