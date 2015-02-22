@@ -6,7 +6,7 @@ Classic Bloom filters generally require a priori knowledge of the data set in or
 
 Boom Filters are useful for situations where the size of the data set isn't known ahead of time. For example, a Stable Bloom Filter can be used to deduplicate events from an unbounded event stream with a specified upper bound on false positives and minimal false negatives. Alternatively, an Inverse Bloom Filter is ideal for deduplicating a stream where duplicate events are relatively close together. This results in no false positives and, depending on how close together duplicates are, a small probability of false negatives. Scalable Bloom Filters place a tight upper bound on false positives while avoiding false negatives but require allocating memory proportional to the size of the data set.
 
-For large or unbounded data sets, calculating the exact cardinality is impractical. HyperLogLog uses a fraction of the memory while providing an accurate approximation. Similarly, Count-Min Sketch provides an efficient way to estimate event frequency for data streams.
+For large or unbounded data sets, calculating the exact cardinality is impractical. HyperLogLog uses a fraction of the memory while providing an accurate approximation. Similarly, Count-Min Sketch provides an efficient way to estimate event frequency for data streams, while Top-K tracks the top-k most frequent elements.
 
 MinHash is a probabilistic algorithm to approximate the similarity between two sets. This can be used to cluster or compare documents by splitting the corpus into a bag of words.
 
@@ -242,6 +242,41 @@ func main() {
     
     // Restore to initial state.
     cms.Reset()
+}
+```
+
+## Top-K
+
+Top-K uses a Count-Min Sketch and min-heap to track the top-k most frequent elements in a stream.
+
+### Usage
+
+```go
+package main
+
+import (
+    "fmt"
+    "github.com/tylertreat/BoomFilters"
+)
+
+func main() {
+	topk := NewTopK(0.001, 0.99, 5)
+
+	topk.Add([]byte(`bob`)).Add([]byte(`bob`)).Add([]byte(`bob`))
+	topk.Add([]byte(`tyler`)).Add([]byte(`tyler`)).Add([]byte(`tyler`)).Add([]byte(`tyler`))
+	topk.Add([]byte(`fred`))
+	topk.Add([]byte(`alice`)).Add([]byte(`alice`)).Add([]byte(`alice`)).Add([]byte(`alice`))
+	topk.Add([]byte(`james`))
+	topk.Add([]byte(`fred`))
+	topk.Add([]byte(`sara`)).Add([]byte(`sara`))
+	topk.Add([]byte(`bill`))
+
+	for i, element := range topk.Elements() {
+		fmt.Println(i, string(element))
+	}
+	
+	// Restore to initial state.
+	topk.Reset()
 }
 ```
 
