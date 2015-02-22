@@ -1,6 +1,9 @@
 package boom
 
-import "testing"
+import (
+	"strconv"
+	"testing"
+)
 
 // Ensures that TopK return the top-k most frequent elements.
 func TestTopK(t *testing.T) {
@@ -40,5 +43,19 @@ func TestTopK(t *testing.T) {
 
 	if n := topk.n; n != 0 {
 		t.Errorf("Expected 0, got %d", n)
+	}
+}
+
+func BenchmarkTopKAdd(b *testing.B) {
+	b.StopTimer()
+	topk := NewTopK(0.001, 0.99, 5)
+	data := make([][]byte, b.N)
+	for i := 0; i < b.N; i++ {
+		data[i] = []byte(strconv.Itoa(i))
+	}
+	b.StartTimer()
+
+	for n := 0; n < b.N; n++ {
+		topk.Add(data[n])
 	}
 }
