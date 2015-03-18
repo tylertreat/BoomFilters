@@ -1,4 +1,5 @@
 # Boom Filters
+[![Build Status](https://travis-ci.org/tylertreat/BoomFilters.svg?branch=master)](https://travis-ci.org/tylertreat/BoomFilters) [![GoDoc](https://godoc.org/github.com/tylertreat/BoomFilters?status.png)](https://godoc.org/github.com/tylertreat/BoomFilters)
 
 **Boom Filters** are probabilistic data structures for [processing continuous, unbounded streams](http://www.bravenewgeek.com/stream-processing-and-probabilistic-methods/). This includes **Stable Bloom Filters**, **Scalable Bloom Filters**, **Counting Bloom Filters**, **Inverse Bloom Filters**, **Cuckoo Filters**, several variants of **traditional Bloom filters**, **HyperLogLog**, **Count-Min Sketch**, and **MinHash**.
 
@@ -9,8 +10,6 @@ Boom Filters are useful for situations where the size of the data set isn't know
 For large or unbounded data sets, calculating the exact cardinality is impractical. HyperLogLog uses a fraction of the memory while providing an accurate approximation. Similarly, Count-Min Sketch provides an efficient way to estimate event frequency for data streams, while Top-K tracks the top-k most frequent elements.
 
 MinHash is a probabilistic algorithm to approximate the similarity between two sets. This can be used to cluster or compare documents by splitting the corpus into a bag of words.
-
-For documentation, see [godoc](http://godoc.org/github.com/tylertreat/BoomFilters).
 
 ## Installation 
 
