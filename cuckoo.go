@@ -202,10 +202,9 @@ func (c *CuckooFilter) add(i1, i2 uint, f []byte) error {
 	// Must relocate existing items.
 	i := i1
 	for n := 0; n < maxNumKicks; n++ {
-		idx := i % c.m
-		tmp := c.buckets[idx][rand.Intn(int(c.b))]
-		c.buckets[idx][0] = f
-		f = tmp
+		bucketIdx := i % c.m
+		entryIdx := rand.Intn(int(c.b))
+		f, c.buckets[bucketIdx][entryIdx] = c.buckets[bucketIdx][entryIdx], f
 		i = i ^ uint(binary.BigEndian.Uint32(c.computeHash(f)))
 		b := c.buckets[i%c.m]
 		if idx, err := b.getEmptyEntry(); err == nil {
