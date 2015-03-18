@@ -20,7 +20,9 @@ events are relatively close together. This results in no false positives
 and, depending on how close together duplicates are, a small probability of
 false negatives. Scalable Bloom Filters place a tight upper bound on false
 positives while avoiding false negatives but require allocating memory
-proportional to the size of the data set.
+proportional to the size of the data set. Counting Bloom Filters and Cuckoo
+Filters are useful for cases which require adding and removing elements to and
+from a set.
 
 For large or unbounded data sets, calculating the exact cardinality is
 impractical. HyperLogLog uses a fraction of the memory while providing an
