@@ -74,9 +74,8 @@ type CuckooFilter struct {
 // with a specified target false-positive rate.
 func NewCuckooFilter(n uint, fpRate float64) *CuckooFilter {
 	var (
-		epsilon = 1 - fpRate
 		b       = uint(4)
-		f       = calculateF(b, epsilon)
+		f       = calculateF(b, fpRate)
 		m       = power2(n / uint(f) * 8)
 		buckets = make([]bucket, m)
 	)
