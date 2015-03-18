@@ -1,10 +1,10 @@
 # Boom Filters
 
-**Boom Filters** are probabilistic data structures for [processing continuous, unbounded streams](http://www.bravenewgeek.com/stream-processing-and-probabilistic-methods/). This includes **Stable Bloom Filters**, **Scalable Bloom Filters**, **Counting Bloom Filters**, **Inverse Bloom Filters**, several variants of **traditional Bloom filters**, **HyperLogLog**, **Count-Min Sketch**, and **MinHash**.
+**Boom Filters** are probabilistic data structures for [processing continuous, unbounded streams](http://www.bravenewgeek.com/stream-processing-and-probabilistic-methods/). This includes **Stable Bloom Filters**, **Scalable Bloom Filters**, **Counting Bloom Filters**, **Inverse Bloom Filters**, **Cuckoo Filters**, several variants of **traditional Bloom filters**, **HyperLogLog**, **Count-Min Sketch**, and **MinHash**.
 
 Classic Bloom filters generally require a priori knowledge of the data set in order to allocate an appropriately sized bit array. This works well for offline processing, but online processing typically involves unbounded data streams. With enough data, a traditional Bloom filter "fills up", after which it has a false-positive probability of 1.
 
-Boom Filters are useful for situations where the size of the data set isn't known ahead of time. For example, a Stable Bloom Filter can be used to deduplicate events from an unbounded event stream with a specified upper bound on false positives and minimal false negatives. Alternatively, an Inverse Bloom Filter is ideal for deduplicating a stream where duplicate events are relatively close together. This results in no false positives and, depending on how close together duplicates are, a small probability of false negatives. Scalable Bloom Filters place a tight upper bound on false positives while avoiding false negatives but require allocating memory proportional to the size of the data set.
+Boom Filters are useful for situations where the size of the data set isn't known ahead of time. For example, a Stable Bloom Filter can be used to deduplicate events from an unbounded event stream with a specified upper bound on false positives and minimal false negatives. Alternatively, an Inverse Bloom Filter is ideal for deduplicating a stream where duplicate events are relatively close together. This results in no false positives and, depending on how close together duplicates are, a small probability of false negatives. Scalable Bloom Filters place a tight upper bound on false positives while avoiding false negatives but require allocating memory proportional to the size of the data set. Counting Bloom Filters and Cuckoo Filters are useful for cases which require adding and removing elements to and from a set.
 
 For large or unbounded data sets, calculating the exact cardinality is impractical. HyperLogLog uses a fraction of the memory while providing an accurate approximation. Similarly, Count-Min Sketch provides an efficient way to estimate event frequency for data streams, while Top-K tracks the top-k most frequent elements.
 
@@ -171,6 +171,45 @@ func main() {
     
     // Restore to initial state.
     bf.Reset()
+}
+```
+
+## Cuckoo Filter
+
+This is an implementation of a Cuckoo Filter as described by Andersen, Kaminsky, and Mitzenmacher in [Cuckoo Filter: Practically Better Than Bloom](http://www.pdl.cmu.edu/PDL-FTP/FS/cuckoo-conext2014.pdf). The Cuckoo Filter is similar to the Counting Bloom Filter in that it supports adding and removing elements, but it does so in a way that doesn't significantly degrade space and performance.
+
+It works by using a cuckoo hashing scheme for inserting items. Instead of storing the elements themselves, it stores their fingerprints which also allows for item removal without false negatives (if you don't attempt to remove an item not contained in the filter).
+
+For applications that store many items and target moderately low false-positive rates, cuckoo filters have lower space overhead than space-optimized Bloom filters.
+
+### Usage
+
+```go
+package main
+
+import (
+    "fmt"
+    "github.com/tylertreat/BoomFilters"
+)
+
+func main() {
+    cf := boom.NewCuckooFilter(1000, 0.01)
+    
+    cf.Add([]byte(`a`))
+    if cf.Test([]byte(`a`)) {
+        fmt.Println("contains a")
+    }
+    
+    if contains, _ := cf.TestAndAdd([]byte(`b`)); !contains {
+        fmt.Println("doesn't contain b")
+    }
+    
+    if cf.TestAndRemove([]byte(`b`)) {
+        fmt.Println("removed b")
+    }
+    
+    // Restore to initial state.
+    cf.Reset()
 }
 ```
 
@@ -349,3 +388,4 @@ func main() {
 - [HyperLogLog: the analysis of a near-optimal cardinality estimation algorithm](http://algo.inria.fr/flajolet/Publications/FlFuGaMe07.pdf)
 - [Package hyperloglog](https://github.com/eclesh/hyperloglog)
 - [On the resemblance and containment of documents](http://gatekeeper.dec.com/ftp/pub/dec/SRC/publications/broder/positano-final-wpnums.pdf)
+- [Cuckoo Filter: Practically Better Than Bloom](http://www.pdl.cmu.edu/PDL-FTP/FS/cuckoo-conext2014.pdf)
