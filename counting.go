@@ -5,7 +5,7 @@ import (
 	"hash/fnv"
 )
 
-// CountingBloomFilter implement a Counting Bloom Filter as described by Fan,
+// CountingBloomFilter implements a Counting Bloom Filter as described by Fan,
 // Cao, Almeida, and Broder in Summary Cache: A Scalable Wide-Area Web Cache
 // Sharing Protocol:
 //
