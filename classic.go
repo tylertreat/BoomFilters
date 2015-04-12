@@ -113,3 +113,7 @@ func (b *BloomFilter) Reset() *BloomFilter {
 	b.buckets.Reset()
 	return b
 }
+
+func (b *BloomFilter) SetHash(h hash.Hash64) {
+	b.hash = h
+}
