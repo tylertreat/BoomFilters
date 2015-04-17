@@ -155,3 +155,9 @@ func (p *PartitionedBloomFilter) Reset() *PartitionedBloomFilter {
 	}
 	return p
 }
+
+// SetHash sets the hashing function used in the filter.
+// For the effect on false positive rates see: https://github.com/tylertreat/BoomFilters/pull/1
+func (p *PartitionedBloomFilter) SetHash(h hash.Hash64) {
+	p.hash = h
+}

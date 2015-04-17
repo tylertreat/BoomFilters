@@ -150,6 +150,11 @@ func (h *HyperLogLog) calculateHash(data []byte) uint32 {
 	return sum
 }
 
+// SetHash sets the hashing function used.
+func (h *HyperLogLog) SetHash(ha hash.Hash32) {
+	h.hash = ha
+}
+
 // calculateAlpha calculates the bias-correction constant alpha based on the
 // number of registers, m.
 func calculateAlpha(m uint) (result float64) {
