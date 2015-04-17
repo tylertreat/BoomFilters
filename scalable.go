@@ -15,7 +15,10 @@ copies or substantial portions of the Software.
 
 package boom
 
-import "math"
+import (
+	"hash"
+	"math"
+)
 
 // ScalableBloomFilter implements a Scalable Bloom Filter as described by
 // Almeida, Baquero, Preguica, and Hutchison in Scalable Bloom Filters:
@@ -139,5 +142,17 @@ func (s *ScalableBloomFilter) Reset() *ScalableBloomFilter {
 // the Scalable Bloom Filter
 func (s *ScalableBloomFilter) addFilter() {
 	fpRate := s.fp * math.Pow(s.r, float64(len(s.filters)))
-	s.filters = append(s.filters, NewPartitionedBloomFilter(s.hint, fpRate))
+	p := NewPartitionedBloomFilter(s.hint, fpRate)
+	if len(s.filters) > 0 {
+		p.SetHash(s.filters[0].hash)
+	}
+	s.filters = append(s.filters, p)
+}
+
+// SetHash sets the hashing function used in the filter.
+// For the effect on false positive rates see: https://github.com/tylertreat/BoomFilters/pull/1
+func (s *ScalableBloomFilter) SetHash(h hash.Hash64) {
+	for _, bf := range s.filters {
+		bf.SetHash(h)
+	}
 }

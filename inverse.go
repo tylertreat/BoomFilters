@@ -130,3 +130,9 @@ func (i *InverseBloomFilter) index(data []byte) uint32 {
 	i.hash.Reset()
 	return index
 }
+
+// SetHash sets the hashing function used in the filter.
+// For the effect on false positive rates see: https://github.com/tylertreat/BoomFilters/pull/1
+func (i *InverseBloomFilter) SetHash(h hash.Hash32) {
+	i.hash = h
+}

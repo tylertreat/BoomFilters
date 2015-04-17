@@ -114,6 +114,8 @@ func (b *BloomFilter) Reset() *BloomFilter {
 	return b
 }
 
+// SetHash sets the hashing function used in the filter.
+// For the effect on false positive rates see: https://github.com/tylertreat/BoomFilters/pull/1
 func (b *BloomFilter) SetHash(h hash.Hash64) {
 	b.hash = h
 }

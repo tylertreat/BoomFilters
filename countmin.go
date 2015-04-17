@@ -138,3 +138,8 @@ func (c *CountMinSketch) Reset() *CountMinSketch {
 	c.count = 0
 	return c
 }
+
+// SetHash sets the hashing function used.
+func (c *CountMinSketch) SetHash(h hash.Hash64) {
+	c.hash = h
+}

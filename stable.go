@@ -203,6 +203,12 @@ func (s *StableBloomFilter) decrement() {
 	}
 }
 
+// SetHash sets the hashing function used in the filter.
+// For the effect on false positive rates see: https://github.com/tylertreat/BoomFilters/pull/1
+func (s *StableBloomFilter) SetHash(h hash.Hash64) {
+	s.hash = h
+}
+
 // optimalStableP returns the optimal number of cells to decrement, p, per
 // iteration for the provided parameters of an SBF.
 func optimalStableP(m, k uint, d uint8, fpRate float64) uint {

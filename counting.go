@@ -150,3 +150,9 @@ func (c *CountingBloomFilter) Reset() *CountingBloomFilter {
 	c.count = 0
 	return c
 }
+
+// SetHash sets the hashing function used in the filter.
+// For the effect on false positive rates see: https://github.com/tylertreat/BoomFilters/pull/1
+func (c *CountingBloomFilter) SetHash(h hash.Hash64) {
+	c.hash = h
+}

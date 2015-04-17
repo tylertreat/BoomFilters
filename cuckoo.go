@@ -238,6 +238,12 @@ func (c *CuckooFilter) computeHash(data []byte) []byte {
 	return hash
 }
 
+// SetHash sets the hashing function used in the filter.
+// For the effect on false positive rates see: https://github.com/tylertreat/BoomFilters/pull/1
+func (c *CuckooFilter) SetHash(h hash.Hash32) {
+	c.hash = h
+}
+
 // calculateF returns the optimal fingerprint length in bytes for the given
 // bucket size and false-positive rate epsilon.
 func calculateF(b uint, epsilon float64) uint {
