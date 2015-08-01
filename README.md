@@ -142,6 +142,8 @@ A Counting Bloom Filter (CBF) provides a way to remove elements by using an arra
 
 Counting Bloom Filters are useful for cases where elements are both added and removed from the data set. Since they use n-bit buckets, CBFs use roughly n-times more memory than traditional Bloom filters.
 
+See Deletable Bloom Filter for an alternative which avoids false negatives.
+
 ### Usage
 
 ```go
