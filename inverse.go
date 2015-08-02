@@ -35,6 +35,7 @@ import (
 	"bytes"
 	"hash"
 	"hash/fnv"
+	"sync"
 	"sync/atomic"
 	"unsafe"
 )
@@ -55,7 +56,7 @@ import (
 // data. Ideally, duplicate events are relatively close together.
 type InverseBloomFilter struct {
 	array    []*[]byte
-	hash     hash.Hash32
+	hashPool *sync.Pool
 	capacity uint
 }
 
@@ -64,7 +65,7 @@ type InverseBloomFilter struct {
 func NewInverseBloomFilter(capacity uint) *InverseBloomFilter {
 	return &InverseBloomFilter{
 		array:    make([]*[]byte, capacity),
-		hash:     fnv.New32(),
+		hashPool: &sync.Pool{New: func() interface{} { return fnv.New32() }},
 		capacity: capacity,
 	}
 }
@@ -125,15 +126,15 @@ func (i *InverseBloomFilter) getAndSet(index uint32, data []byte) []byte {
 
 // index returns the array index for the given data.
 func (i *InverseBloomFilter) index(data []byte) uint32 {
-	// TODO: This is not thread-safe. Consider using a ring buffer of hashes.
-	i.hash.Write(data)
-	index := i.hash.Sum32() % uint32(i.capacity)
-	i.hash.Reset()
+	hash := i.hashPool.Get().(hash.Hash32)
+	hash.Write(data)
+	index := hash.Sum32() % uint32(i.capacity)
+	hash.Reset()
+	i.hashPool.Put(hash)
 	return index
 }
 
-// SetHash sets the hashing function used in the filter.
-// For the effect on false positive rates see: https://github.com/tylertreat/BoomFilters/pull/1
-func (i *InverseBloomFilter) SetHash(h hash.Hash32) {
-	i.hash = h
+// SetHashFactory sets the hashing function factory used in the filter.
+func (i *InverseBloomFilter) SetHashFactory(h func() hash.Hash32) {
+	i.hashPool = &sync.Pool{New: func() interface{} { return h() }}
 }
