@@ -125,6 +125,7 @@ func (i *InverseBloomFilter) getAndSet(index uint32, data []byte) []byte {
 
 // index returns the array index for the given data.
 func (i *InverseBloomFilter) index(data []byte) uint32 {
+	// TODO: This is not thread-safe. Consider using a ring buffer of hashes.
 	i.hash.Write(data)
 	index := i.hash.Sum32() % uint32(i.capacity)
 	i.hash.Reset()
