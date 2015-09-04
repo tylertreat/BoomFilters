@@ -68,7 +68,7 @@ func (t *TopK) Add(data []byte) *TopK {
 // Elements returns the top-k elements from lowest to highest frequency.
 func (t *TopK) Elements() []*element {
 	if t.elements.Len() == 0 {
-		return nil
+		return make([]*element, 0)
 	}
 
 	elements := make(elementHeap, t.elements.Len())
