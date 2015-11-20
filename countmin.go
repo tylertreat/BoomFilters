@@ -1,9 +1,12 @@
 package boom
 
 import (
+	"bytes"
+	"encoding/binary"
 	"errors"
 	"hash"
 	"hash/fnv"
+	"io"
 	"math"
 )
 
@@ -142,4 +145,54 @@ func (c *CountMinSketch) Reset() *CountMinSketch {
 // SetHash sets the hashing function used.
 func (c *CountMinSketch) SetHash(h hash.Hash64) {
 	c.hash = h
+}
+
+// WriteTo serialize into byte slice
+func (c *CountMinSketch) WriteDataTo(stream io.Writer) (int, error) {
+
+	buf := new(bytes.Buffer)
+	err := binary.Write(buf, binary.LittleEndian, c.count)
+	if err != nil {
+		return 0, err
+	}
+
+	for i := range c.matrix {
+		err = binary.Write(buf, binary.LittleEndian, c.matrix[i])
+		if err != nil {
+			return 0, err
+		}
+	}
+
+	return stream.Write(buf.Bytes())
+}
+
+// ReadFrom desirialize byte slice
+func (c *CountMinSketch) ReadDataFrom(stream io.Reader) (int, error) {
+	var (
+		width = uint(math.Ceil(math.E / c.epsilon))
+		depth = uint(math.Ceil(math.Log(1 / c.delta)))
+		count uint64 // number of items added
+	)
+
+	err := binary.Read(stream, binary.LittleEndian, &count)
+	if err != nil {
+		return 0, err
+	}
+
+	if err != nil {
+		return 0, err
+	}
+
+	matrix := make([][]uint64, depth)
+	for i := uint(0); i < uint(depth); i++ {
+		matrix[i] = make([]uint64, width)
+		err = binary.Read(stream, binary.LittleEndian, matrix[i])
+	}
+
+	size := int(depth*width)*binary.Size(uint64(0)) + binary.Size(count)
+
+	c.matrix = matrix
+	c.count = count
+
+	return size, err
 }
