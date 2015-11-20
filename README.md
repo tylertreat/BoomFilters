@@ -280,8 +280,25 @@ func main() {
     fmt.Println("frequency of bob", cms.Count([]byte(`bob`)))
     fmt.Println("frequency of frank", cms.Count([]byte(`frank`)))
     
+
+    // Serialization example
+    buf := new(bytes.Buffer)
+    n, err := cms.WriteDataTo(buf)
+    if err != nil {
+       fmt.Println(err, n)
+    }
+
+    newCMS := boom.NewCountMinSketch(0.001, 0.99)
+    n, err = newCMS.ReadDataFrom(buf)
+    if err != nil {
+       fmt.Println(err, n)
+    }
+
+    fmt.Println("frequency of frank", cms.Count([]byte(`frank`)))
+
     // Restore to initial state.
     cms.Reset()
+
 }
 ```
 

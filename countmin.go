@@ -147,7 +147,8 @@ func (c *CountMinSketch) SetHash(h hash.Hash64) {
 	c.hash = h
 }
 
-// WriteTo serialize into byte slice
+// WriteDataTo writes a binary representation of the CMS data to
+// an io stream. It returns the number of bytes written and error
 func (c *CountMinSketch) WriteDataTo(stream io.Writer) (int, error) {
 
 	buf := new(bytes.Buffer)
@@ -155,7 +156,7 @@ func (c *CountMinSketch) WriteDataTo(stream io.Writer) (int, error) {
 	if err != nil {
 		return 0, err
 	}
-
+	// encode matrix
 	for i := range c.matrix {
 		err = binary.Write(buf, binary.LittleEndian, c.matrix[i])
 		if err != nil {
@@ -166,32 +167,23 @@ func (c *CountMinSketch) WriteDataTo(stream io.Writer) (int, error) {
 	return stream.Write(buf.Bytes())
 }
 
-// ReadFrom desirialize byte slice
+// ReadDataFrom reads a binary representation of the CMS data written
+// by WriteDataTo() from io stream. It returns the number of bytes read
+// and error
 func (c *CountMinSketch) ReadDataFrom(stream io.Reader) (int, error) {
-	var (
-		width = uint(math.Ceil(math.E / c.epsilon))
-		depth = uint(math.Ceil(math.Log(1 / c.delta)))
-		count uint64 // number of items added
-	)
+	var count uint64
 
 	err := binary.Read(stream, binary.LittleEndian, &count)
 	if err != nil {
 		return 0, err
 	}
 
-	if err != nil {
-		return 0, err
+	for i := uint(0); i < uint(c.depth); i++ {
+		err = binary.Read(stream, binary.LittleEndian, c.matrix[i])
 	}
+	// count size of matrix and count
+	size := int(c.depth*c.width)*binary.Size(uint64(0)) + binary.Size(count)
 
-	matrix := make([][]uint64, depth)
-	for i := uint(0); i < uint(depth); i++ {
-		matrix[i] = make([]uint64, width)
-		err = binary.Read(stream, binary.LittleEndian, matrix[i])
-	}
-
-	size := int(depth*width)*binary.Size(uint64(0)) + binary.Size(count)
-
-	c.matrix = matrix
 	c.count = count
 
 	return size, err
