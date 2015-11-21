@@ -1,9 +1,12 @@
 package boom
 
 import (
+	"bytes"
+	"encoding/binary"
 	"errors"
 	"hash"
 	"hash/fnv"
+	"io"
 	"math"
 )
 
@@ -142,4 +145,46 @@ func (c *CountMinSketch) Reset() *CountMinSketch {
 // SetHash sets the hashing function used.
 func (c *CountMinSketch) SetHash(h hash.Hash64) {
 	c.hash = h
+}
+
+// WriteDataTo writes a binary representation of the CMS data to
+// an io stream. It returns the number of bytes written and error
+func (c *CountMinSketch) WriteDataTo(stream io.Writer) (int, error) {
+
+	buf := new(bytes.Buffer)
+	err := binary.Write(buf, binary.LittleEndian, c.count)
+	if err != nil {
+		return 0, err
+	}
+	// encode matrix
+	for i := range c.matrix {
+		err = binary.Write(buf, binary.LittleEndian, c.matrix[i])
+		if err != nil {
+			return 0, err
+		}
+	}
+
+	return stream.Write(buf.Bytes())
+}
+
+// ReadDataFrom reads a binary representation of the CMS data written
+// by WriteDataTo() from io stream. It returns the number of bytes read
+// and error
+func (c *CountMinSketch) ReadDataFrom(stream io.Reader) (int, error) {
+	var count uint64
+
+	err := binary.Read(stream, binary.LittleEndian, &count)
+	if err != nil {
+		return 0, err
+	}
+
+	for i := uint(0); i < uint(c.depth); i++ {
+		err = binary.Read(stream, binary.LittleEndian, c.matrix[i])
+	}
+	// count size of matrix and count
+	size := int(c.depth*c.width)*binary.Size(uint64(0)) + binary.Size(count)
+
+	c.count = count
+
+	return size, err
 }

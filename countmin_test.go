@@ -1,6 +1,7 @@
 package boom
 
 import (
+	"bytes"
 	"strconv"
 	"testing"
 )
@@ -113,6 +114,99 @@ func TestCMSReset(t *testing.T) {
 			}
 		}
 	}
+}
+
+// Test binary serialization
+func TestCMSSerialization(t *testing.T) {
+	freq := 73
+	epsilon, delta := 0.001, 0.99
+	cms := NewCountMinSketch(epsilon, delta)
+	a := []byte(`a`)
+	for i := 0; i < freq; i++ {
+		cms.Add(a)
+
+	}
+	if count := cms.Count(a); count != uint64(freq) {
+		t.Errorf("expected %d, got %d\n", freq, count)
+	}
+
+	buf := new(bytes.Buffer)
+	// serialize
+	wn, err := cms.WriteDataTo(buf)
+	if err != nil {
+		t.Error("unexpected error bytes written %d", err, wn)
+	}
+
+	blankCMS := NewCountMinSketch(epsilon, delta)
+	// deserialize
+	rn, err := blankCMS.ReadDataFrom(buf)
+	if err != nil {
+		t.Errorf("readfrom err %s bytes read %d", err, rn)
+	}
+	if wn != rn {
+		t.Errorf("expected %d, got %d\n", wn, rn)
+	}
+	// check correctness
+	if count := blankCMS.Count(a); count != uint64(freq) {
+		t.Errorf("expected %d, got %d\n", freq, count)
+	}
+
+}
+
+func BenchmarkCMSWriteDataTo(b *testing.B) {
+	b.StopTimer()
+	freq := 73
+	epsilon, delta := 0.001, 0.99
+	cms := NewCountMinSketch(epsilon, delta)
+	a := []byte(`a`)
+	for i := 0; i < freq; i++ {
+		cms.Add(a)
+
+	}
+	var buf bytes.Buffer
+	b.StartTimer()
+	b.ReportAllocs()
+	for i := 0; i < b.N; i++ {
+		_, err := cms.WriteDataTo(&buf)
+		if err != nil {
+			b.Errorf("unexpected error %s\n", err)
+		}
+	}
+
+}
+
+func BenchmarkCMSReadDataTo(b *testing.B) {
+	b.StopTimer()
+	b.N = 10000
+	freq := 73
+	epsilon, delta := 0.001, 0.99
+	cms := NewCountMinSketch(epsilon, delta)
+	a := []byte(`a`)
+	for i := 0; i < freq; i++ {
+		cms.Add(a)
+
+	}
+	var buf bytes.Buffer
+	_, err := cms.WriteDataTo(&buf)
+	if err != nil {
+		b.Errorf("unexpected error %s\n", err)
+	}
+	data := make([]byte, b.N*buf.Len())
+	for i := 0; i < b.N; i++ {
+		data = append(data, buf.Bytes()...)
+	}
+	rd := bytes.NewReader(data)
+	newCMS := NewCountMinSketch(epsilon, delta)
+	b.StartTimer()
+	b.ReportAllocs()
+
+	for i := 0; i < b.N; i++ {
+		_, err := newCMS.ReadDataFrom(rd)
+		if err != nil {
+			b.Errorf("unexpected error %s\n", err)
+		}
+	}
+
 }
 
 func BenchmarkCMSAdd(b *testing.B) {
