@@ -151,6 +151,17 @@ func TestCMSSerialization(t *testing.T) {
 		t.Errorf("expected %d, got %d\n", freq, count)
 	}
 
+	// serialize
+	wn, err = cms.WriteDataTo(buf)
+	if err != nil {
+		t.Error("unexpected error bytes written %d", err, wn)
+	}
+	wrongCMS := NewCountMinSketch(epsilon+0.01, delta)
+	rn, err = wrongCMS.ReadDataFrom(buf)
+	if err != ErrCMSDecode {
+		t.Errorf("expected %s, got %s\n", ErrCMSDecode, err)
+	}
+
 }
 
 func BenchmarkCMSWriteDataTo(b *testing.B) {
