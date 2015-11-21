@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/binary"
 	"errors"
+	"fmt"
 	"hash"
 	"hash/fnv"
 	"io"
@@ -150,9 +151,17 @@ func (c *CountMinSketch) SetHash(h hash.Hash64) {
 // WriteDataTo writes a binary representation of the CMS data to
 // an io stream. It returns the number of bytes written and error
 func (c *CountMinSketch) WriteDataTo(stream io.Writer) (int, error) {
-
 	buf := new(bytes.Buffer)
-	err := binary.Write(buf, binary.LittleEndian, c.count)
+	// serialize epsilon and delta as cms configuration check
+	err := binary.Write(buf, binary.LittleEndian, c.epsilon)
+	if err != nil {
+		return 0, err
+	}
+	err = binary.Write(buf, binary.LittleEndian, c.delta)
+	if err != nil {
+		return 0, err
+	}
+	err = binary.Write(buf, binary.LittleEndian, c.count)
 	if err != nil {
 		return 0, err
 	}
@@ -170,10 +179,28 @@ func (c *CountMinSketch) WriteDataTo(stream io.Writer) (int, error) {
 // ReadDataFrom reads a binary representation of the CMS data written
 // by WriteDataTo() from io stream. It returns the number of bytes read
 // and error
+// If serialized CMS configuration is different it returns error with expected params
 func (c *CountMinSketch) ReadDataFrom(stream io.Reader) (int, error) {
-	var count uint64
+	var (
+		count          uint64
+		epsilon, delta float64
+	)
 
-	err := binary.Read(stream, binary.LittleEndian, &count)
+	err := binary.Read(stream, binary.LittleEndian, &epsilon)
+	if err != nil {
+		return 0, err
+	}
+	err = binary.Read(stream, binary.LittleEndian, &delta)
+	if err != nil {
+		return 0, err
+	}
+
+	// check if serialized and target cms configurations are same
+	if c.epsilon != epsilon || c.delta != delta {
+		return 0, fmt.Errorf("expected cms values for epsilon %f and delta %f", epsilon, delta)
+	}
+
+	err = binary.Read(stream, binary.LittleEndian, &count)
 	if err != nil {
 		return 0, err
 	}
@@ -182,7 +209,7 @@ func (c *CountMinSketch) ReadDataFrom(stream io.Reader) (int, error) {
 		err = binary.Read(stream, binary.LittleEndian, c.matrix[i])
 	}
 	// count size of matrix and count
-	size := int(c.depth*c.width)*binary.Size(uint64(0)) + binary.Size(count)
+	size := int(c.depth*c.width)*binary.Size(uint64(0)) + binary.Size(count) + 2*binary.Size(float64(0))
 
 	c.count = count
 

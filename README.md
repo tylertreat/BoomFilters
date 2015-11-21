@@ -288,17 +288,18 @@ func main() {
        fmt.Println(err, n)
     }
 
+    // Restore to initial state.
+    cms.Reset()
+
     newCMS := boom.NewCountMinSketch(0.001, 0.99)
     n, err = newCMS.ReadDataFrom(buf)
     if err != nil {
        fmt.Println(err, n)
     }
 
-    fmt.Println("frequency of frank", cms.Count([]byte(`frank`)))
+    fmt.Println("frequency of frank", newCMS.Count([]byte(`frank`)))
 
-    // Restore to initial state.
-    cms.Reset()
-
+   
 }
 ```
 
@@ -365,9 +366,28 @@ func main() {
     
     hll.Add([]byte(`alice`)).Add([]byte(`bob`)).Add([]byte(`bob`)).Add([]byte(`frank`))
     fmt.Println("count", hll.Count())
+
+    // Serialization example
+    buf := new(bytes.Buffer)
+    _, err := hll.WriteDataTo(buf)
+    if err != nil {
+       fmt.Println(err)
+    }
     
     // Restore to initial state.
     hll.Reset()
+
+    newHll, err := boom.NewDefaultHyperLogLog(0.1)
+    if err != nil {
+       fmt.Println(err)
+    }
+
+    _, err := newHll.ReadDataFrom(buf)
+    if err != nil {
+       fmt.Println(err)
+    }
+    fmt.Println("count", newHll.Count())
+
 }
 ```
 

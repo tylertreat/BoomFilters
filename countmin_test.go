@@ -3,6 +3,7 @@ package boom
 import (
 	"bytes"
 	"strconv"
+	"strings"
 	"testing"
 )
 
@@ -151,6 +152,18 @@ func TestCMSSerialization(t *testing.T) {
 		t.Errorf("expected %d, got %d\n", freq, count)
 	}
 
+	// serialize
+	wn, err = cms.WriteDataTo(buf)
+	if err != nil {
+		t.Error("unexpected error bytes written %d", err, wn)
+	}
+	wrongCMS := NewCountMinSketch(epsilon+0.01, delta)
+	rn, err = wrongCMS.ReadDataFrom(buf)
+
+	if !strings.Contains(err.Error(), "cms values") {
+		t.Error("unexpected error %s", err)
+	}
+
 }
 
 func BenchmarkCMSWriteDataTo(b *testing.B) {
@@ -175,7 +188,7 @@ func BenchmarkCMSWriteDataTo(b *testing.B) {
 
 }
 
-func BenchmarkCMSReadDataTo(b *testing.B) {
+func BenchmarkCMSReadDataFrom(b *testing.B) {
 	b.StopTimer()
 	b.N = 10000
 	freq := 73
@@ -191,7 +204,7 @@ func BenchmarkCMSReadDataTo(b *testing.B) {
 	if err != nil {
 		b.Errorf("unexpected error %s\n", err)
 	}
-	data := make([]byte, b.N*buf.Len())
+	data := make([]byte, 0)
 	for i := 0; i < b.N; i++ {
 		data = append(data, buf.Bytes()...)
 	}
