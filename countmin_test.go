@@ -188,7 +188,7 @@ func BenchmarkCMSWriteDataTo(b *testing.B) {
 
 }
 
-func BenchmarkCMSReadDataTo(b *testing.B) {
+func BenchmarkCMSReadDataFrom(b *testing.B) {
 	b.StopTimer()
 	b.N = 10000
 	freq := 73
@@ -204,7 +204,7 @@ func BenchmarkCMSReadDataTo(b *testing.B) {
 	if err != nil {
 		b.Errorf("unexpected error %s\n", err)
 	}
-	data := make([]byte, b.N*buf.Len())
+	data := make([]byte, 0)
 	for i := 0; i < b.N; i++ {
 		data = append(data, buf.Bytes()...)
 	}
