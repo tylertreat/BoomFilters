@@ -4,13 +4,12 @@ import (
 	"bytes"
 	"encoding/binary"
 	"errors"
+	"fmt"
 	"hash"
 	"hash/fnv"
 	"io"
 	"math"
 )
-
-var ErrCMSDecode = errors.New("target cms epsilon/delta different")
 
 // CountMinSketch implements a Count-Min Sketch as described by Cormode and
 // Muthukrishnan in An Improved Data Stream Summary: The Count-Min Sketch and
@@ -152,7 +151,6 @@ func (c *CountMinSketch) SetHash(h hash.Hash64) {
 // WriteDataTo writes a binary representation of the CMS data to
 // an io stream. It returns the number of bytes written and error
 func (c *CountMinSketch) WriteDataTo(stream io.Writer) (int, error) {
-
 	buf := new(bytes.Buffer)
 	// serialize epsilon and delta as cms configuration check
 	err := binary.Write(buf, binary.LittleEndian, c.epsilon)
@@ -181,6 +179,7 @@ func (c *CountMinSketch) WriteDataTo(stream io.Writer) (int, error) {
 // ReadDataFrom reads a binary representation of the CMS data written
 // by WriteDataTo() from io stream. It returns the number of bytes read
 // and error
+// If serialized CMS configuration is different it returns error with expected params
 func (c *CountMinSketch) ReadDataFrom(stream io.Reader) (int, error) {
 	var (
 		count          uint64
@@ -198,7 +197,7 @@ func (c *CountMinSketch) ReadDataFrom(stream io.Reader) (int, error) {
 
 	// check if serialized and target cms configurations are same
 	if c.epsilon != epsilon || c.delta != delta {
-		return 0, ErrCMSDecode
+		return 0, fmt.Errorf("expected cms values for epsilon %f and delta %f", epsilon, delta)
 	}
 
 	err = binary.Read(stream, binary.LittleEndian, &count)

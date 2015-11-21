@@ -3,6 +3,7 @@ package boom
 import (
 	"bytes"
 	"strconv"
+	"strings"
 	"testing"
 )
 
@@ -158,8 +159,9 @@ func TestCMSSerialization(t *testing.T) {
 	}
 	wrongCMS := NewCountMinSketch(epsilon+0.01, delta)
 	rn, err = wrongCMS.ReadDataFrom(buf)
-	if err != ErrCMSDecode {
-		t.Errorf("expected %s, got %s\n", ErrCMSDecode, err)
+
+	if !strings.Contains(err.Error(), "cms values") {
+		t.Error("unexpected error %s", err)
 	}
 
 }

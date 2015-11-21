@@ -23,6 +23,7 @@ import (
 	"io"
 	"math"
 	"os"
+	"strings"
 	"testing"
 )
 
@@ -108,7 +109,6 @@ func TestNewDefaultHyperLogLog(t *testing.T) {
 	}
 }
 
-// TODO
 func TestHyperLogLogSerialization(t *testing.T) {
 	hll, err := NewDefaultHyperLogLog(0.1)
 	if err != nil {
@@ -156,8 +156,9 @@ func TestHyperLogLogSerialization(t *testing.T) {
 
 	// hll register number should be same with serialized hll
 	_, err = wrongHll.ReadDataFrom(buf)
-	if err != ErrHllDecode {
-		t.Error("expected error %s, got %s", ErrHllDecode, err)
+
+	if !strings.Contains(err.Error(), "hll register") {
+		t.Error("unexpected error %s", err)
 	}
 
 }

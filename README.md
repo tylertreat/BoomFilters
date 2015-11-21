@@ -366,9 +366,28 @@ func main() {
     
     hll.Add([]byte(`alice`)).Add([]byte(`bob`)).Add([]byte(`bob`)).Add([]byte(`frank`))
     fmt.Println("count", hll.Count())
+
+    // Serialization example
+    buf := new(bytes.Buffer)
+    _, err := hll.WriteDataTo(buf)
+    if err != nil {
+       fmt.Println(err)
+    }
     
     // Restore to initial state.
     hll.Reset()
+
+    newHll, err := boom.NewDefaultHyperLogLog(0.1)
+    if err != nil {
+       fmt.Println(err)
+    }
+
+    _, err := newHll.ReadDataFrom(buf)
+    if err != nil {
+       fmt.Println(err)
+    }
+    fmt.Println("count", newHll.Count())
+
 }
 ```
 

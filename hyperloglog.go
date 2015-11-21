@@ -20,18 +20,14 @@ import (
 	"bytes"
 	"encoding/binary"
 	"errors"
+	"fmt"
 	"hash"
 	"hash/fnv"
 	"io"
 	"math"
 )
 
-var (
-	exp32 = math.Pow(2, 32)
-
-	// errors
-	ErrHllDecode = errors.New("target hll register number is different")
-)
+var exp32 = math.Pow(2, 32)
 
 // HyperLogLog implements the HyperLogLog cardinality estimation algorithm as
 // described by Flajolet, Fusy, Gandouet, and Meunier in HyperLogLog: the
@@ -189,6 +185,8 @@ func calculateRho(val, max uint32) uint8 {
 	return uint8(r)
 }
 
+// WriteDataTo writes a binary representation of the Hll data to
+// an io stream. It returns the number of bytes written and error
 func (h *HyperLogLog) WriteDataTo(stream io.Writer) (n int, err error) {
 	buf := new(bytes.Buffer)
 	// write register number first
@@ -216,6 +214,10 @@ func (h *HyperLogLog) WriteDataTo(stream io.Writer) (n int, err error) {
 	return
 }
 
+// ReadDataFrom reads a binary representation of the Hll data written
+// by WriteDataTo() from io stream. It returns the number of bytes read
+// and error.
+// If serialized Hll configuration is different it returns error with expected params
 func (h *HyperLogLog) ReadDataFrom(stream io.Reader) (int, error) {
 	var m uint64
 	// read register number first
@@ -226,7 +228,7 @@ func (h *HyperLogLog) ReadDataFrom(stream io.Reader) (int, error) {
 	// check if register number is appropriate
 	// hll register number should be same with serialized hll
 	if uint64(h.m) != m {
-		return 0, ErrHllDecode
+		return 0, fmt.Errorf("expected hll register number %d", m)
 	}
 	// set other values
 	err = binary.Read(stream, binary.LittleEndian, &h.b)
