@@ -288,17 +288,18 @@ func main() {
        fmt.Println(err, n)
     }
 
+    // Restore to initial state.
+    cms.Reset()
+
     newCMS := boom.NewCountMinSketch(0.001, 0.99)
     n, err = newCMS.ReadDataFrom(buf)
     if err != nil {
        fmt.Println(err, n)
     }
 
-    fmt.Println("frequency of frank", cms.Count([]byte(`frank`)))
+    fmt.Println("frequency of frank", newCMS.Count([]byte(`frank`)))
 
-    // Restore to initial state.
-    cms.Reset()
-
+   
 }
 ```
 
