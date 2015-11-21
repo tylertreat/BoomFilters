@@ -18,6 +18,7 @@ package boom
 
 import (
 	"bufio"
+	"bytes"
 	"fmt"
 	"io"
 	"math"
@@ -105,6 +106,57 @@ func TestNewDefaultHyperLogLog(t *testing.T) {
 	if hll.m != 128 {
 		t.Errorf("expected 128, got %d", hll.m)
 	}
+}
+
+// TODO
+func TestHyperLogLogSerialization(t *testing.T) {
+	hll, err := NewDefaultHyperLogLog(0.1)
+	if err != nil {
+		t.Fatalf("can't make NewDefaultHyperLogLog(0.1): %v", err)
+	}
+	ppl := []string{"frank", "alice", "bob"}
+	for _, v := range ppl {
+		hll.Add([]byte(v))
+		if v == "bob" || v == "frank" {
+			hll.Add([]byte(v))
+		}
+	}
+
+	buf := new(bytes.Buffer)
+	// serialize
+	wn, err := hll.WriteDataTo(buf)
+	if err != nil {
+		t.Error("unexpected error bytes written %d", err, wn)
+	}
+
+	newHll, err := NewDefaultHyperLogLog(0.1)
+	if err != nil {
+		t.Error("unexpected error", err)
+	}
+
+	rn, err := newHll.ReadDataFrom(buf)
+	if err != nil {
+		t.Errorf("readfrom err %s bytes read %d", err, rn)
+	}
+
+	if count := newHll.Count(); count != uint64(len(ppl)) {
+		t.Errorf("expected %d, got %d\n", len(ppl), count)
+	}
+
+	wrongHll, err := NewDefaultHyperLogLog(0.01)
+	if err != nil {
+		t.Error("unexpected error", err)
+	}
+	_, err = newHll.WriteDataTo(buf)
+	if err != nil {
+		t.Error("unexpected error", err)
+	}
+	// hll register number should be same with serialized hll
+	_, err = wrongHll.ReadDataFrom(buf)
+	if err != ErrHllDecode {
+		t.Error("expected error %s, got %s", ErrHllDecode, err)
+	}
+
 }
 
 func benchmarkCount(b *testing.B, registers int) {
