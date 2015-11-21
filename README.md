@@ -330,7 +330,7 @@ func main() {
 	topk.Add([]byte(`bill`))
 
 	for i, element := range topk.Elements() {
-		fmt.Println(i, string(element))
+		fmt.Println(i, string(element.Data), element.Freq)
 	}
 	
 	// Restore to initial state.
