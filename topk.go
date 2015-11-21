@@ -5,20 +5,20 @@ import (
 	"container/heap"
 )
 
-type element struct {
+type Element struct {
 	Data []byte
 	Freq uint64
 }
 
 // An elementHeap is a min-heap of elements.
-type elementHeap []*element
+type elementHeap []*Element
 
 func (e elementHeap) Len() int           { return len(e) }
 func (e elementHeap) Less(i, j int) bool { return e[i].Freq < e[j].Freq }
 func (e elementHeap) Swap(i, j int)      { e[i], e[j] = e[j], e[i] }
 
 func (e *elementHeap) Push(x interface{}) {
-	*e = append(*e, x.(*element))
+	*e = append(*e, x.(*Element))
 }
 
 func (e *elementHeap) Pop() interface{} {
@@ -66,18 +66,18 @@ func (t *TopK) Add(data []byte) *TopK {
 }
 
 // Elements returns the top-k elements from lowest to highest frequency.
-func (t *TopK) Elements() []*element {
+func (t *TopK) Elements() []*Element {
 	if t.elements.Len() == 0 {
-		return make([]*element, 0)
+		return make([]*Element, 0)
 	}
 
 	elements := make(elementHeap, t.elements.Len())
 	copy(elements, *t.elements)
 	heap.Init(&elements)
-	topK := make([]*element, 0, t.k)
+	topK := make([]*Element, 0, t.k)
 
 	for elements.Len() > 0 {
-		topK = append(topK, heap.Pop(&elements).(*element))
+		topK = append(topK, heap.Pop(&elements).(*Element))
 	}
 
 	return topK
@@ -121,5 +121,5 @@ func (t *TopK) insert(data []byte, freq uint64) {
 	}
 
 	// Add element to top-k.
-	heap.Push(t.elements, &element{Data: data, Freq: freq})
+	heap.Push(t.elements, &Element{Data: data, Freq: freq})
 }

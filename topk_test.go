@@ -28,7 +28,7 @@ func TestTopK(t *testing.T) {
 	}
 
 	for i, element := range actual {
-		if e := string(element); e != expected[i] {
+		if e := string((*element).Data); e != expected[i] {
 			t.Errorf("Expected %s, got %s", expected[i], e)
 		}
 	}
