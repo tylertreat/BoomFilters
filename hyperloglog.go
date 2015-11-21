@@ -31,7 +31,7 @@ var exp32 = math.Pow(2, 32)
 
 // HyperLogLog implements the HyperLogLog cardinality estimation algorithm as
 // described by Flajolet, Fusy, Gandouet, and Meunier in HyperLogLog: the
-// analysis of a neanr-optimal cardinality estimation algorithm:
+// analysis of a near-optimal cardinality estimation algorithm:
 //
 // http://algo.inria.fr/flajolet/Publications/FlFuGaMe07.pdf
 //
