@@ -138,11 +138,13 @@ func (b *BloomFilter) WriteTo(stream io.Writer) (int64, error) {
 	if err != nil {
 		return 0, err
 	}
-	if _, err := b.buckets.WriteTo(stream); err != nil {
+
+	writtenSize, err := b.buckets.WriteTo(stream)
+	if err != nil {
 		return 0, err
 	}
 
-	return int64(5 * binary.Size(uint64(0))), err
+	return writtenSize + int64(3 * binary.Size(uint64(0))), err
 }
 
 // ReadFrom reads a binary representation of BloomFilter (such as might
@@ -165,12 +167,16 @@ func (b *BloomFilter) ReadFrom(stream io.Reader) (int64, error) {
 		return 0, err
 	}
 
-	buckets.ReadFrom(stream)
+	readSize, err := buckets.ReadFrom(stream)
+	if err != nil {
+		return 0, err
+	}
+
 	b.count = uint(count)
 	b.m = uint(m)
 	b.k = uint(k)
 	b.buckets = &buckets
-	return int64(5 * binary.Size(uint64(0))), nil
+	return readSize + int64(3 * binary.Size(uint64(0))), nil
 }
 
 // GobEncode implements gob.GobEncoder interface.
