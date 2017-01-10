@@ -1,6 +1,9 @@
 package boom
 
 import (
+	"bytes"
+	"encoding/gob"
+	"github.com/d4l3k/messagediff"
 	"strconv"
 	"testing"
 )
@@ -126,6 +129,39 @@ func TestBloomReset(t *testing.T) {
 	for i := uint(0); i < f.buckets.Count(); i++ {
 		if f.buckets.Get(i) != 0 {
 			t.Error("Expected all bits to be unset")
+		}
+	}
+}
+
+// Ensures that BloomFilter can be serialized and deserialized without errors.
+func TestBloomFilter_EncodeDecode(t *testing.T) {
+	f := NewBloomFilter(1000, 0.1)
+
+	for i := 0; i < 1000; i++ {
+		f.Add([]byte(strconv.Itoa(i)))
+	}
+
+	var buf bytes.Buffer
+	if err := gob.NewEncoder(&buf).Encode(f); err != nil {
+		t.Error(err)
+	}
+
+	f2 := NewBloomFilter(100, 0.1)
+	if err := gob.NewDecoder(&buf).Decode(f2); err != nil {
+		t.Error(err)
+	}
+
+	if diff, equal := messagediff.PrettyDiff(f, f2); !equal {
+		t.Errorf("BloomFilter Gob Encode and Decode = %+v; not %+v\n%s", f2, f, diff)
+	}
+
+	if len(f.buckets.data) != len(f2.buckets.data) {
+		t.Errorf("BloomFilter has different sized data after encode/decode")
+	}
+
+	for i := 0; i < len(f.buckets.data); i++ {
+		if f.buckets.data[i] != f2.buckets.data[i] {
+			t.Errorf("BloomFilter has different data after encode/decode")
 		}
 	}
 }
