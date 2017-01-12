@@ -1,11 +1,11 @@
 package boom
 
 import (
-	"strconv"
-	"testing"
 	"bytes"
 	"encoding/gob"
 	"github.com/d4l3k/messagediff"
+	"strconv"
+	"testing"
 )
 
 // Ensures that Capacity returns the correct filter size.
@@ -100,7 +100,7 @@ func TestInverseBloomFilter_Encode(t *testing.T) {
 		t.Errorf("BloomFilter Gob Encode and Decode = %+v; not %+v\n%s", f2, f, diff)
 	}
 
-	for i:=0; i<100000; i++ {
+	for i := 0; i < 100000; i++ {
 		if f.Test([]byte(strconv.Itoa(i))) != f2.Test([]byte(strconv.Itoa(i))) {
 			t.Errorf("Expected both filters to Test the same for %i", i)
 		}

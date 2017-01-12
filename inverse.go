@@ -33,14 +33,14 @@ package boom
 
 import (
 	"bytes"
+	"encoding/binary"
+	"encoding/gob"
 	"hash"
 	"hash/fnv"
+	"io"
 	"sync"
 	"sync/atomic"
 	"unsafe"
-	"io"
-	"encoding/binary"
-	"encoding/gob"
 )
 
 // InverseBloomFilter is a concurrent "inverse" Bloom filter, which is
@@ -152,7 +152,7 @@ func (i *InverseBloomFilter) WriteTo(stream io.Writer) (int64, error) {
 
 	// Dereference all pointers to []byte
 	array := make([][]byte, int(i.capacity))
-	for b := range(i.array) {
+	for b := range i.array {
 		if i.array[b] != nil {
 			array[b] = *i.array[b]
 		} else {
@@ -206,7 +206,7 @@ func (i *InverseBloomFilter) ReadFrom(stream io.Reader) (int64, error) {
 
 	// Create []*[]byte and point to each item in decoded
 	decodedWithPointers := make([]*[]byte, capacity)
-	for p := range(decodedWithPointers) {
+	for p := range decodedWithPointers {
 		if len(decoded[p]) == 0 {
 			decodedWithPointers[p] = nil
 		} else {
