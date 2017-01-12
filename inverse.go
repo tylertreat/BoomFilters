@@ -177,7 +177,7 @@ func (i *InverseBloomFilter) WriteTo(stream io.Writer) (int64, error) {
 		return 0, err
 	}
 
-	return int64(written) + int64(1*binary.Size(uint64(0))), err
+	return int64(written) + int64(2*binary.Size(uint64(0))), err
 }
 
 // ReadFrom reads a binary representation of InverseBloomFilter (such as might
@@ -216,7 +216,7 @@ func (i *InverseBloomFilter) ReadFrom(stream io.Reader) (int64, error) {
 
 	i.array = decodedWithPointers
 	i.capacity = uint(capacity)
-	return int64(1) + int64(1*binary.Size(uint64(0))), nil
+	return int64(len(encoded)) + int64(2*binary.Size(uint64(0))), nil
 }
 
 // GobEncode implements gob.GobEncoder interface.
