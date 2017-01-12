@@ -82,7 +82,7 @@ func TestInverseBloomFilter_Encode(t *testing.T) {
 	if err := gob.NewEncoder(&buf).Encode(f); err != nil {
 		t.Error(err)
 	}
-	//
+
 	f2 := NewInverseBloomFilter(10000)
 	if err := gob.NewDecoder(&buf).Decode(f2); err != nil {
 		t.Error(err)
@@ -105,7 +105,6 @@ func TestInverseBloomFilter_Encode(t *testing.T) {
 			t.Errorf("Expected both filters to Test the same for %i", i)
 		}
 	}
-
 }
 
 func BenchmarkInverseAdd(b *testing.B) {
