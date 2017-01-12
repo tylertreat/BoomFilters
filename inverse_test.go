@@ -3,6 +3,9 @@ package boom
 import (
 	"strconv"
 	"testing"
+	"bytes"
+	"encoding/gob"
+	"github.com/d4l3k/messagediff"
 )
 
 // Ensures that Capacity returns the correct filter size.
@@ -65,6 +68,44 @@ func TestInverseTestAndAdd(t *testing.T) {
 	if !f.Test([]byte(`c`)) {
 		t.Error("`c` should be a member")
 	}
+}
+
+// Tests that an InverseBloomFilter can be encoded and decoded properly without error
+func TestInverseBloomFilter_Encode(t *testing.T) {
+	f := NewInverseBloomFilter(10000)
+
+	for i := 0; i < 1000; i++ {
+		f.Add([]byte(strconv.Itoa(i)))
+	}
+
+	var buf bytes.Buffer
+	if err := gob.NewEncoder(&buf).Encode(f); err != nil {
+		t.Error(err)
+	}
+	//
+	f2 := NewInverseBloomFilter(10000)
+	if err := gob.NewDecoder(&buf).Decode(f2); err != nil {
+		t.Error(err)
+	}
+
+	if f.capacity != f2.capacity {
+		t.Errorf("Different capacities")
+	}
+
+	if len(f.array) != len(f2.array) {
+		t.Errorf("Different data")
+	}
+
+	if diff, equal := messagediff.PrettyDiff(f.array, f2.array); !equal {
+		t.Errorf("BloomFilter Gob Encode and Decode = %+v; not %+v\n%s", f2, f, diff)
+	}
+
+	for i:=0; i<100000; i++ {
+		if f.Test([]byte(strconv.Itoa(i))) != f2.Test([]byte(strconv.Itoa(i))) {
+			t.Errorf("Expected both filters to Test the same for %i", i)
+		}
+	}
+
 }
 
 func BenchmarkInverseAdd(b *testing.B) {
