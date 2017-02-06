@@ -144,7 +144,7 @@ func (b *BloomFilter) WriteTo(stream io.Writer) (int64, error) {
 		return 0, err
 	}
 
-	return writtenSize + int64(3 * binary.Size(uint64(0))), err
+	return writtenSize + int64(3*binary.Size(uint64(0))), err
 }
 
 // ReadFrom reads a binary representation of BloomFilter (such as might
@@ -176,7 +176,7 @@ func (b *BloomFilter) ReadFrom(stream io.Reader) (int64, error) {
 	b.m = uint(m)
 	b.k = uint(k)
 	b.buckets = &buckets
-	return readSize + int64(3 * binary.Size(uint64(0))), nil
+	return readSize + int64(3*binary.Size(uint64(0))), nil
 }
 
 // GobEncode implements gob.GobEncoder interface.
