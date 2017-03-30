@@ -1,9 +1,13 @@
 package boom
 
 import (
+	"bytes"
+	"encoding/gob"
 	"math"
 	"strconv"
 	"testing"
+
+	"github.com/d4l3k/messagediff"
 )
 
 // Ensures that NewUnstableBloomFilter creates a Stable Bloom Filter with p=0,
@@ -164,6 +168,28 @@ func TestReset(t *testing.T) {
 		if cell := f.cells.Get(i); cell != 0 {
 			t.Errorf("Expected zero cell, got %d", cell)
 		}
+	}
+}
+
+// Ensures that StableBloomFilter can be serialized and deserialized without errors.
+func TestStableGob(t *testing.T) {
+	f := NewDefaultStableBloomFilter(128, 0.1)
+	for i := 0; i < 1000; i++ {
+		f.Add([]byte(strconv.Itoa(i)))
+	}
+
+	var buf bytes.Buffer
+	if err := gob.NewEncoder(&buf).Encode(f); err != nil {
+		t.Error(err)
+	}
+
+	f2 := NewDefaultStableBloomFilter(128, 0.1)
+	if err := gob.NewDecoder(&buf).Decode(f2); err != nil {
+		t.Error(err)
+	}
+
+	if diff, equal := messagediff.PrettyDiff(f, f2); !equal {
+		t.Errorf("StableBoomFilter Gob Encode and Decode = %+v; not %+v\n%s", f2, f, diff)
 	}
 }
 
