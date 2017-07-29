@@ -318,7 +318,7 @@ import (
 )
 
 func main() {
-	topk := NewTopK(0.001, 0.99, 5)
+	topk := boom.NewTopK(0.001, 0.99, 5)
 
 	topk.Add([]byte(`bob`)).Add([]byte(`bob`)).Add([]byte(`bob`))
 	topk.Add([]byte(`tyler`)).Add([]byte(`tyler`)).Add([]byte(`tyler`)).Add([]byte(`tyler`))
@@ -369,7 +369,7 @@ func main() {
 
     // Serialization example
     buf := new(bytes.Buffer)
-    _, err := hll.WriteDataTo(buf)
+    _, err = hll.WriteDataTo(buf)
     if err != nil {
        fmt.Println(err)
     }
@@ -382,7 +382,7 @@ func main() {
        fmt.Println(err)
     }
 
-    _, err := newHll.ReadDataFrom(buf)
+    _, err = newHll.ReadDataFrom(buf)
     if err != nil {
        fmt.Println(err)
     }
