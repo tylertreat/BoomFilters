@@ -17,7 +17,7 @@ func TestNewUnstableBloomFilter(t *testing.T) {
 	k := OptimalK(0.1)
 
 	if f.k != k {
-		t.Errorf("Expected %f, got %d", k, f.k)
+		t.Errorf("Expected %d, got %d", k, f.k)
 	}
 
 	if f.m != 100 {
