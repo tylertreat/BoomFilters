@@ -26,7 +26,7 @@ func TestTopK(t *testing.T) {
 		name string
 		freq uint64
 	}{
-		{"bill", 1},
+		{"fred", 2},
 		{"sara", 2},
 		{"bob", 3},
 		{"alice", 4},
