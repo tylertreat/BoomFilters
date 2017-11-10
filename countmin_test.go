@@ -135,7 +135,7 @@ func TestCMSSerialization(t *testing.T) {
 	// serialize
 	wn, err := cms.WriteDataTo(buf)
 	if err != nil {
-		t.Error("unexpected error bytes written %d", err, wn)
+		t.Errorf("unexpected error bytes written %d: %v", wn, err)
 	}
 
 	blankCMS := NewCountMinSketch(epsilon, delta)
@@ -155,13 +155,13 @@ func TestCMSSerialization(t *testing.T) {
 	// serialize
 	wn, err = cms.WriteDataTo(buf)
 	if err != nil {
-		t.Error("unexpected error bytes written %d", err, wn)
+		t.Errorf("unexpected error bytes written %d: %v", wn, err)
 	}
 	wrongCMS := NewCountMinSketch(epsilon+0.01, delta)
 	rn, err = wrongCMS.ReadDataFrom(buf)
 
 	if !strings.Contains(err.Error(), "cms values") {
-		t.Error("unexpected error %s", err)
+		t.Errorf("unexpected error %v", err)
 	}
 
 }

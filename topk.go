@@ -107,10 +107,12 @@ func (t *TopK) isTop(freq uint64) bool {
 // the frequency is updated. If the heap already has k elements, the element
 // with the minimum frequency is removed.
 func (t *TopK) insert(data []byte, freq uint64) {
-	for _, element := range *t.elements {
-		if bytes.Compare(data, element.Data) == 0 {
-			// Element already in top-k.
+	for i, element := range *t.elements {
+		if bytes.Equal(data, element.Data) {
+			// Element already in top-k, replace it with new frequency.
+			heap.Remove(t.elements, i)
 			element.Freq = freq
+			heap.Push(t.elements, element)
 			return
 		}
 	}

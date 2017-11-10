@@ -126,7 +126,7 @@ func TestHyperLogLogSerialization(t *testing.T) {
 	// serialize
 	wn, err := hll.WriteDataTo(buf)
 	if err != nil {
-		t.Error("unexpected error bytes written %d", err, wn)
+		t.Errorf("unexpected error bytes written %d: %v", wn, err)
 	}
 	hll.Reset()
 
@@ -158,7 +158,7 @@ func TestHyperLogLogSerialization(t *testing.T) {
 	_, err = wrongHll.ReadDataFrom(buf)
 
 	if !strings.Contains(err.Error(), "hll register") {
-		t.Error("unexpected error %s", err)
+		t.Errorf("unexpected error %v", err)
 	}
 
 }
