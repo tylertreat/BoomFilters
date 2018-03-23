@@ -76,7 +76,7 @@ func NewCuckooFilter(n uint, fpRate float64) *CuckooFilter {
 	var (
 		b       = uint(4)
 		f       = calculateF(b, fpRate)
-		m       = power2(n / uint(f) * 8)
+		m       = power2(n / f * 8)
 		buckets = make([]bucket, m)
 	)
 
@@ -89,7 +89,7 @@ func NewCuckooFilter(n uint, fpRate float64) *CuckooFilter {
 		hash:    fnv.New32(),
 		m:       m,
 		b:       b,
-		f:       uint(f),
+		f:       f,
 		n:       n,
 	}
 }

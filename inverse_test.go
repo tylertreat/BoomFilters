@@ -3,10 +3,11 @@ package boom
 import (
 	"bytes"
 	"encoding/gob"
-	"github.com/d4l3k/messagediff"
 	"os"
 	"strconv"
 	"testing"
+
+	"github.com/d4l3k/messagediff"
 )
 
 // Ensures that Capacity returns the correct filter size.

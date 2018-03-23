@@ -222,7 +222,7 @@ func (s *ScalableBloomFilter) ReadFrom(stream io.Reader) (int64, error) {
 	}
 	var numBytes int64
 	filters := make([]*PartitionedBloomFilter, len)
-	for i, _ := range filters {
+	for i := range filters {
 		filter := NewPartitionedBloomFilter(0, fp)
 		num, err := filter.ReadFrom(stream)
 		if err != nil {

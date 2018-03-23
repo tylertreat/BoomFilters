@@ -277,7 +277,7 @@ func (s *StableBloomFilter) ReadFrom(stream io.Reader) (int64, error) {
 	}
 	indexBuffer := make([]uint, bufferLen)
 	var index uint64
-	for i, _ := range indexBuffer {
+	for i := range indexBuffer {
 		err = binary.Read(stream, binary.BigEndian, &index)
 		if err != nil {
 			return 0, err

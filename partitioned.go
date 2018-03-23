@@ -226,7 +226,7 @@ func (p *PartitionedBloomFilter) ReadFrom(stream io.Reader) (int64, error) {
 	}
 	var numBytes int64
 	partitions := make([]*Buckets, len)
-	for i, _ := range partitions {
+	for i := range partitions {
 		buckets := &Buckets{}
 		num, err := buckets.ReadFrom(stream)
 		if err != nil {
