@@ -3,9 +3,10 @@ package boom
 import (
 	"bytes"
 	"encoding/gob"
-	"github.com/d4l3k/messagediff"
 	"strconv"
 	"testing"
+
+	"github.com/d4l3k/messagediff"
 )
 
 // Ensures that Capacity returns the number of bits, m, in the Bloom filter.
