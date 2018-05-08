@@ -92,6 +92,14 @@ func TestDeletableTestAndAdd(t *testing.T) {
 	}
 }
 
+// Ensures collisions do not cause a panic due to regionSize.
+func TestDeletableCollisions(t *testing.T) {
+	d := NewDeletableBloomFilter(100, 120, 0.05)
+	for i := 0; i < 100; i++ {
+		d.Add([]byte(strconv.Itoa(i)))
+	}
+}
+
 // Ensures that TestAndRemove behaves correctly.
 func TestDeletableTestAndRemove(t *testing.T) {
 	d := NewDeletableBloomFilter(100, 10, 0.1)

@@ -42,7 +42,7 @@ func NewDeletableBloomFilter(n, r uint, fpRate float64) *DeletableBloomFilter {
 	)
 	return &DeletableBloomFilter{
 		buckets:     NewBuckets(m-r, 1),
-		collisions:  NewBuckets(r, 1),
+		collisions:  NewBuckets(r+1, 1),
 		hash:        fnv.New64(),
 		m:           m - r,
 		regionSize:  (m - r) / r,
