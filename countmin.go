@@ -205,7 +205,7 @@ func (c *CountMinSketch) ReadDataFrom(stream io.Reader) (int, error) {
 		return 0, err
 	}
 
-	for i := uint(0); i < uint(c.depth); i++ {
+	for i := uint(0); i < c.depth; i++ {
 		err = binary.Read(stream, binary.LittleEndian, c.matrix[i])
 	}
 	// count size of matrix and count

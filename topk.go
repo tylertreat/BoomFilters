@@ -5,6 +5,7 @@ import (
 	"container/heap"
 )
 
+// Element represents a data and it's frequency
 type Element struct {
 	Data []byte
 	Freq uint64
