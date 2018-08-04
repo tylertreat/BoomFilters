@@ -190,6 +190,20 @@ func TestCMSTestAndRemove(t *testing.T) {
 	if count := cms.Count([]byte("a")); count != 1 {
 		t.Errorf("expected 1, got %d", count)
 	}
+
+	if try := cms.TestAndRemoveAll([]byte("z")); try {
+		t.Errorf("expected false, got %t", try)
+	}
+
+	cms.Add([]byte(`a`)).Add([]byte(`a`)).Add([]byte(`a`))
+
+	if try := cms.TestAndRemoveAll([]byte("a")); !try {
+		t.Errorf("expected true, got %t", try)
+	}
+
+	if count := cms.Count([]byte("a")); count != 0 {
+		t.Errorf("expected 0, got %d", count)
+	}
 }
 
 func BenchmarkCMSWriteDataTo(b *testing.B) {
