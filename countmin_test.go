@@ -166,6 +166,32 @@ func TestCMSSerialization(t *testing.T) {
 
 }
 
+func TestCMSTestAndRemove(t *testing.T) {
+	cms := NewCountMinSketch(0.001, 0.99)
+
+	cms.Add([]byte(`b`))
+	cms.Add([]byte(`c`))
+	cms.Add([]byte(`b`))
+	cms.Add([]byte(`d`))
+	cms.Add([]byte(`a`)).Add([]byte(`a`)).Add([]byte(`a`)).Add([]byte(`a`))
+
+	if try := cms.TestAndRemove([]byte("a"), 5); try {
+		t.Errorf("expected false, got %t", try)
+	}
+
+	if count := cms.Count([]byte("a")); count != 4 {
+		t.Errorf("expected 4, got %d", count)
+	}
+
+	if try := cms.TestAndRemove([]byte("a"), 3); !try {
+		t.Errorf("expected true, got %t", try)
+	}
+
+	if count := cms.Count([]byte("a")); count != 1 {
+		t.Errorf("expected 1, got %d", count)
+	}
+}
+
 func BenchmarkCMSWriteDataTo(b *testing.B) {
 	b.StopTimer()
 	freq := 73

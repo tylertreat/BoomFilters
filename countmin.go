@@ -215,3 +215,29 @@ func (c *CountMinSketch) ReadDataFrom(stream io.Reader) (int, error) {
 
 	return size, err
 }
+
+// TestAndRemove attemps to remove n counts of data from the CMS. If
+// n is greater than the data count, TestAndRemove is a no-op and
+// returns false. Else, return true and decrement count by n.
+func (c *CountMinSketch) TestAndRemove(data []byte, n uint64) bool {
+	var (
+		lower, upper = hashKernel(data, c.hash)
+		count        = uint64(math.MaxUint64)
+		h            = make([]*uint64, c.depth)
+	)
+
+	for i := uint(0); i < c.depth; i++ {
+		h[i] = &c.matrix[i][(uint(lower)+uint(upper)*i)%c.width]
+		count = uint64(math.Min(float64(count), float64(*h[i])))
+	}
+
+	if n > count {
+		return false
+	}
+
+	for i := uint(0); i < c.depth; i++ {
+		*h[i] -= n
+	}
+
+	return true
+}
