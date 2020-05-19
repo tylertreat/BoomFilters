@@ -194,6 +194,9 @@ func (b *BloomFilter) GobEncode() ([]byte, error) {
 func (b *BloomFilter) GobDecode(data []byte) error {
 	buf := bytes.NewBuffer(data)
 	_, err := b.ReadFrom(buf)
+	if b.hash == nil {
+		b.hash = fnv.New64()
+	}
 
 	return err
 }
