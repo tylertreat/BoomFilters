@@ -147,7 +147,7 @@ func TestBloomFilter_EncodeDecode(t *testing.T) {
 		t.Error(err)
 	}
 
-	f2 := NewBloomFilter(100, 0.1)
+	f2 := &BloomFilter{}
 	if err := gob.NewDecoder(&buf).Decode(f2); err != nil {
 		t.Error(err)
 	}
