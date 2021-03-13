@@ -37,7 +37,6 @@ into a bag of words.
 package boom
 
 import (
-	"encoding/binary"
 	"hash"
 	"math"
 )
@@ -77,7 +76,9 @@ func OptimalK(fpRate float64) uint {
 // hashes are derived.
 func hashKernel(data []byte, hash hash.Hash64) (uint32, uint32) {
 	hash.Write(data)
-	sum := hash.Sum(nil)
+	sum := hash.Sum64()
 	hash.Reset()
-	return binary.BigEndian.Uint32(sum[4:8]), binary.BigEndian.Uint32(sum[0:4])
+	upper := uint32(sum & 0xffffffff)
+	lower := uint32((sum >> 32) & 0xffffffff)
+	return upper, lower
 }
