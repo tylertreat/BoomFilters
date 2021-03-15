@@ -133,12 +133,12 @@ func (c *CountMinSketch) Merge(other *CountMinSketch) error {
 // Reset restores the CountMinSketch to its original state. It returns itself
 // to allow for chaining.
 func (c *CountMinSketch) Reset() *CountMinSketch {
-	matrix := make([][]uint64, c.depth)
-	for i := uint(0); i < c.depth; i++ {
-		matrix[i] = make([]uint64, c.width)
+	for i := 0; i < len(c.matrix); i++ {
+		for j := 0; j < len(c.matrix[i]); j++ {
+			c.matrix[i][j] = 0
+		}
 	}
 
-	c.matrix = matrix
 	c.count = 0
 	return c
 }

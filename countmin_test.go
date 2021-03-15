@@ -290,3 +290,13 @@ func BenchmarkCMSCount(b *testing.B) {
 		cms.Count(data[n])
 	}
 }
+
+func BenchmarkCMSReset(b *testing.B) {
+	b.StopTimer()
+	cms := NewCountMinSketch(0.0001, 0.1)
+	b.StartTimer()
+
+	for n := 0; n < b.N; n++ {
+		cms.Reset()
+	}
+}
