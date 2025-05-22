@@ -78,7 +78,7 @@ func hashKernel(data []byte, hash hash.Hash64) (uint32, uint32) {
 	hash.Write(data)
 	sum := hash.Sum64()
 	hash.Reset()
-	upper := uint32(sum & 0xffffffff)
-	lower := uint32((sum >> 32) & 0xffffffff)
-	return upper, lower
+	lower := uint32(sum & 0xffffffff)
+	upper := uint32((sum >> 32) & 0xffffffff)
+	return lower, upper
 }
