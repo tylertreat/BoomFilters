@@ -93,6 +93,17 @@ func (c *CountMinSketch) Add(data []byte) *CountMinSketch {
 	return c
 }
 
+func (c *CountMinSketch) Set(data []byte, count uint64) *CountMinSketch {
+	lower, upper := hashKernel(data, c.hash)
+
+	// Increment count in each row.
+	for i := uint(0); i < c.depth; i++ {
+		c.matrix[i][(uint(lower)+uint(upper)*i)%c.width] = count
+	}
+
+	return c
+}
+
 // Count returns the approximate count for the specified item, correct within
 // epsilon * total count with a probability of delta.
 func (c *CountMinSketch) Count(data []byte) uint64 {
