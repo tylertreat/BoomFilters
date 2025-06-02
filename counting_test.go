@@ -1,6 +1,9 @@
 package boom
 
 import (
+	"bytes"
+	"encoding/gob"
+	"math/rand"
 	"strconv"
 	"testing"
 )
@@ -111,6 +114,44 @@ func TestCountingTestAndRemove(t *testing.T) {
 	// `a` is no longer in the filter.
 	if f.TestAndRemove([]byte(`a`)) {
 		t.Error("`a` should not be a member")
+	}
+}
+
+// Ensure that the serialization works flawlessly
+func TestSerialization(t *testing.T) {
+	f := NewDefaultCountingBloomFilter(1000, 0.1)
+	for i := 0; i < 100; i++ {
+		// get a random number to show the time to add i
+		num := rand.Intn(10) + 1
+		for j := 0; j < num; j++ {
+			f.Add([]byte(strconv.Itoa(i)))
+		}
+	}
+
+	var buf bytes.Buffer
+	if err := gob.NewEncoder(&buf).Encode(f); err != nil {
+		t.Error(err)
+	}
+
+	newFilter := &CountingBloomFilter{}
+	if err := gob.NewDecoder(&buf).Decode(newFilter); err != nil {
+		t.Error(err)
+	}
+
+	if newFilter.Count() != f.Count() {
+		t.Errorf("Expected count %d, got %d", f.Count(), newFilter.Count())
+	}
+
+	for i := 0; i < 100; i++ {
+		if !newFilter.Test([]byte(strconv.Itoa(i))) {
+			t.Errorf("Expected to find %d in the filter", i)
+		}
+	}
+
+	for i := 100; i < 200; i++ {
+		if newFilter.Test([]byte(strconv.Itoa(i))) {
+			t.Errorf("Expected not to find %d in the filter", i)
+		}
 	}
 }
 
