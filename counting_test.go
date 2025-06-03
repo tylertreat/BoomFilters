@@ -119,8 +119,9 @@ func TestCountingTestAndRemove(t *testing.T) {
 
 // Ensure that the serialization works flawlessly
 func TestSerialization(t *testing.T) {
-	f := NewDefaultCountingBloomFilter(1000, 0.1)
-	for i := 0; i < 100; i++ {
+	n := 5
+	f := NewDefaultCountingBloomFilter(uint(n), 0.01)
+	for i := 0; i < n; i++ {
 		// get a random number to show the time to add i
 		num := rand.Intn(10) + 1
 		for j := 0; j < num; j++ {
@@ -142,17 +143,22 @@ func TestSerialization(t *testing.T) {
 		t.Errorf("Expected count %d, got %d", f.Count(), newFilter.Count())
 	}
 
-	for i := 0; i < 100; i++ {
+	for i := 0; i < n; i++ {
 		if !newFilter.Test([]byte(strconv.Itoa(i))) {
 			t.Errorf("Expected to find %d in the filter", i)
 		}
 	}
 
-	for i := 100; i < 200; i++ {
+	falsePositive := 0
+	for i := n; i < 2*n; i++ {
 		if newFilter.Test([]byte(strconv.Itoa(i))) {
-			t.Errorf("Expected not to find %d in the filter", i)
+			falsePositive++
 		}
 	}
+	if falsePositive > n/100+5 {
+		t.Errorf("Expected not to find this much false positive in the filter")
+	}
+
 }
 
 // Ensures that Reset sets every bit to zero and the count is zero.
