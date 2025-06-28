@@ -20,6 +20,46 @@ func TestCMSTotalCount(t *testing.T) {
 	}
 }
 
+// Ensures that AddN adds n items to the set and Count returns the correct
+// approximation.
+func TestCMSAddNAndCount(t *testing.T) {
+	cms := NewCountMinSketch(0.001, 0.99)
+
+	if cms.AddN([]byte(`a`), 5) != cms {
+		t.Error("Returned CountMinSketch should be the same instance")
+	}
+
+	cms.AddN([]byte(`b`), 3)
+	cms.AddN([]byte(`c`), 1)
+	cms.AddN([]byte(`b`), 2)
+	cms.AddN([]byte(`d`), 1)
+	cms.AddN([]byte(`a`), 2).AddN([]byte(`a`), 1)
+
+	if count := cms.Count([]byte(`a`)); count != 8 {
+		t.Errorf("expected 8, got %d", count)
+	}
+
+	if count := cms.Count([]byte(`b`)); count != 5 {
+		t.Errorf("expected 5, got %d", count)
+	}
+
+	if count := cms.Count([]byte(`c`)); count != 1 {
+		t.Errorf("expected 1, got %d", count)
+	}
+
+	if count := cms.Count([]byte(`d`)); count != 1 {
+		t.Errorf("expected 1, got %d", count)
+	}
+
+	if count := cms.Count([]byte(`x`)); count != 0 {
+		t.Errorf("expected 0, got %d", count)
+	}
+
+	if totalCount := cms.TotalCount(); totalCount != 15 {
+		t.Errorf("expected total count 15, got %d", totalCount)
+	}
+}
+
 // Ensures that Add adds to the set and Count returns the correct
 // approximation.
 func TestCMSAddAndCount(t *testing.T) {

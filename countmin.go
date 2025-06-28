@@ -93,6 +93,20 @@ func (c *CountMinSketch) Add(data []byte) *CountMinSketch {
 	return c
 }
 
+// AddN will add the data to the set n times. Returns the CountMinSketch to allow for
+// chaining.
+func (c *CountMinSketch) AddN(data []byte, n uint64) *CountMinSketch {
+	lower, upper := hashKernel(data, c.hash)
+
+	// Increment count in each row by n.
+	for i := uint(0); i < c.depth; i++ {
+		c.matrix[i][(uint(lower)+uint(upper)*i)%c.width] += n
+	}
+
+	c.count += n
+	return c
+}
+
 // Count returns the approximate count for the specified item, correct within
 // epsilon * total count with a probability of delta.
 func (c *CountMinSketch) Count(data []byte) uint64 {
