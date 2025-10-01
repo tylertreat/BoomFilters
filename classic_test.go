@@ -167,6 +167,39 @@ func TestBloomFilter_EncodeDecode(t *testing.T) {
 	}
 }
 
+// TestBloomFilter_ReadFrom tests that ReadFrom correctly deserializes
+// a bloom filter and initializes all necessary fields including hash
+func TestBloomFilter_ReadFrom(t *testing.T) {
+	// Create and populate a bloom filter
+	f := NewBloomFilter(1000, 0.01)
+	f.Add([]byte("test1"))
+	f.Add([]byte("test2"))
+	f.Add([]byte("test3"))
+	
+	// Serialize using WriteTo
+	var buf bytes.Buffer
+	_, err := f.WriteTo(&buf)
+	if err != nil {
+		t.Fatalf("WriteTo failed: %v", err)
+	}
+	
+	// Deserialize using ReadFrom
+	f2 := &BloomFilter{}
+	_, err = f2.ReadFrom(bytes.NewReader(buf.Bytes()))
+	if err != nil {
+		t.Fatalf("ReadFrom failed: %v", err)
+	}
+	
+	// Verify the deserialized filter works correctly
+	if !f2.Test([]byte("test1")) || !f2.Test([]byte("test2")) || !f2.Test([]byte("test3")) {
+		t.Error("ReadFrom failed to properly restore filter state")
+	}
+	
+	if f2.Test([]byte("test4")) {
+		t.Error("ReadFrom produced false positive for item not in original")
+	}
+}
+
 func BenchmarkBloomAdd(b *testing.B) {
 	b.StopTimer()
 	f := NewBloomFilter(100000, 0.1)
