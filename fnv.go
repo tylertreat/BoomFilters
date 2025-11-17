@@ -20,7 +20,6 @@ package boom
 
 import (
 	"hash"
-	"hash/fnv"
 )
 
 const (
