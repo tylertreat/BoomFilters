@@ -35,6 +35,7 @@ import (
 	"bytes"
 	"encoding/binary"
 	"encoding/gob"
+	"errors"
 	"hash"
 	"io"
 	"sync"
@@ -244,11 +245,18 @@ func (i *InverseBloomFilter) decodeToArray(stream io.Reader) ([][]byte, uint64, 
 
 	// Read the encoded slice and decode into [][]byte
 	encoded := make([]byte, size)
-	stream.Read(encoded)
+	if _, err := io.ReadFull(stream, encoded); err != nil {
+		return nil, 0, 0, err
+	}
 	buf := bytes.NewBuffer(encoded)
 	dec := gob.NewDecoder(buf)
 	decoded := make([][]byte, capacity)
-	dec.Decode(&decoded)
+	if err := dec.Decode(&decoded); err != nil {
+		return nil, 0, 0, err
+	}
+	if uint64(len(decoded)) != capacity {
+		return nil, 0, 0, errors.New("inverse bloom filter capacity does not match decoded array length")
+	}
 
 	return decoded, capacity, size, nil
 }
